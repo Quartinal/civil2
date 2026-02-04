@@ -5,25 +5,37 @@
   "type": "module",
   "scripts": {
     "dev": "farm",
-    "start": "farm start",
+    "start": "ts-node server.ts",
     "build": "farm build",
     "preview": "farm preview",
     "clean": "farm clean",
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "lint": "biome lint --fix"
   },
   "dependencies": {
     "@lottiefiles/dotlottie-web": "^0.61.0",
-    "@tailwindcss/vite": "^4.1.18",
     "classix": "^2.2.6",
-    "preact": "^10.20.1",
-    "tailwindcss": "^4.1.18"
+    "compression": "^1.8.1",
+    "express": "^5.2.1",
+    "preact": "^10.20.1"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.14",
     "@farmfe/cli": "^1.0.4",
     "@farmfe/core": "^1.6.7",
+    "@farmfe/js-plugin-postcss": "^1.12.0",
+    "@farmfe/plugin-react": "^1.2.6",
     "@preact/preset-vite": "^2.8.1",
+    "@types/compression": "^1.8.1",
+    "@types/express": "^5.0.6",
     "@types/node": "^25.2.0",
-    "typescript": "^5.4.3"
+    "autoprefixer": "^10.4.24",
+    "cssnano": "^7.1.2",
+    "postcss": "^8.5.6",
+    "postcss-load-config": "^6.0.1",
+    "postcss-preset-env": "^11.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.3",
+    "vite-tsconfig-paths": "^6.0.5"
   }
 }

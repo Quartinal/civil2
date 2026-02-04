@@ -1,15 +1,12 @@
-import isPageLoading from "~/lib/isPageLoading";
-import "./app.css";
+import usePageLoading from "~/lib/usePageLoading";
+import Loading from "~/components/Loading";
 
 export default function App() {
-    const { isLoading, pageLoadId } = isPageLoading();
+  const { isLoading, pageLoadId } = usePageLoading();
 
-    if (isLoading) {
-        return (
-            <div class="loading-screen">
-                <h1>Loading...</h1>
-                <p>Page Load ID: {pageLoadId}</p>
-            </div>
-        );
-    }
+  if (isLoading) {
+    return <Loading key={pageLoadId ?? "loading"} />;
+  }
+
+  return <div />;
 }
