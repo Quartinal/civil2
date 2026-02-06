@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "preact/hooks";
 
 const MIN_LOAD_TIME = 5000;
 
-export default function isPageLoading() {
+export default function usePageLoading() {
   const [isLoading, setIsLoading] = useState(true);
   const [pageLoadId, setPageLoadId] = useState<UUID | null>(null);
 

@@ -14,10 +14,19 @@
   },
   "dependencies": {
     "@lottiefiles/dotlottie-web": "^0.61.0",
+    "@mercuryworkshop/bare-mux": "^2.1.8",
+    "@mercuryworkshop/bare-transport": "^1.0.0",
+    "@mercuryworkshop/epoxy-transport": "^3.0.1",
+    "@mercuryworkshop/libcurl-transport": "^2.0.5",
+    "@mercuryworkshop/scramjet": "https://github.com/MercuryWorkshop/scramjet/releases/download/latest/mercuryworkshop-scramjet-2.0.0-alpha.tgz",
+    "@mercuryworkshop/wisp-js": "^0.4.1",
+    "@titaniumnetwork-dev/ultraviolet": "^3.2.10",
+    "@tomphttp/bare-server-node": "^2.0.6",
     "classix": "^2.2.6",
     "compression": "^1.8.1",
     "express": "^5.2.1",
-    "preact": "^10.20.1"
+    "preact": "^10.20.1",
+    "rammerhead": "https://github.com/civilnetwork-dev/rammerhead-443/releases/download/v1.2.64/rammerhead-1.2.64.tgz"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.14",
