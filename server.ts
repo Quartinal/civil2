@@ -41,6 +41,7 @@ const server = createServer(app);
 const PORT = process.env.PORT || 9876;
 
 app.use(express.static(resolve(import.meta.dirname, "dist")));
+app.use("/config", express.static(resolve(import.meta.dirname, "dist-config")));
 app.use(compression());
 
 const libcurlPath = resolve(

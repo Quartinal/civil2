@@ -1,0 +1,72 @@
+.stats {
+  position: relative;
+  display: inline-block;
+  font-family: "Rubik", sans-serif;
+  font-weight: 700;
+}
+
+.stats__toggle {
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--ctp-macchiato-overlay0);
+  background: var(--ctp-macchiato-surface0);
+  color: var(--ctp-macchiato-text);
+  cursor: pointer;
+  transition: background-color 150ms cubic-bezier(0.86, 0, 0.07, 1);
+  font-family: "Rubik", sans-serif;
+  font-weight: 700;
+}
+
+.stats__toggle:hover {
+  background: var(--ctp-macchiato-surface1);
+}
+
+.stats__panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.5rem;
+  min-width: 13rem;
+  background: var(--ctp-macchiato-base);
+  color: var(--ctp-macchiato-text);
+  border: 1px solid var(--ctp-macchiato-overlay0);
+  border-radius: 6px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  z-index: 50;
+  font-size: 0.75rem;
+}
+
+.stats__panel--hidden {
+  display: none;
+}
+
+.stats__content {
+  padding: 0.75rem;
+}
+
+.stats__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.stats__row:last-child {
+  margin-bottom: 0;
+}
+
+.stats__label {
+  color: var(--ctp-macchiato-subtext0);
+}
+
+.stats__value--fps {
+  color: var(--ctp-macchiato-green);
+}
+
+.stats__value--ping {
+  color: var(--ctp-macchiato-sky);
+}
+
+.stats__value--memory {
+  color: var(--ctp-macchiato-mauve);
+}

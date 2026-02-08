@@ -10,4 +10,5 @@ em++ -O3 -std=c++20 \
   -sENVIRONMENT=web \
   -sEXPORT_NAME=XOREncoder \
   -sALLOW_MEMORY_GROWTH \
+  --emit-tsd xor_encoder.d.ts \
   -o xor_encoder.js

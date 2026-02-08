@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import cx from "classix";
+import "~/styles/stats-for-nerds.css";
+import "@catppuccin/palette/css/catppuccin.css";
 
 export default function StatsForNerds() {
   const [open, setOpen] = useState(false);

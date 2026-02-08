@@ -16,19 +16,24 @@ export default function usePageLoading() {
     setPageLoadId(pageId);
     localStorage.setItem("pageLoadId", pageId);
 
-    const handleLoad = () => {
+    const finishLoading = () => {
       const elapsed = Date.now() - loadStartRef.current;
       const remaining = Math.max(0, MIN_LOAD_TIME - elapsed);
 
       setTimeout(() => {
         setIsLoading(false);
+        localStorage.removeItem("pageLoadId");
       }, remaining);
     };
 
-    window.addEventListener("load", handleLoad);
+    if (document.readyState === "complete") {
+      finishLoading();
+    } else {
+      window.addEventListener("load", finishLoading);
+    }
 
     return () => {
-      window.removeEventListener("load", handleLoad);
+      window.removeEventListener("load", finishLoading);
     };
   }, []);
 
