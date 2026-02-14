@@ -31,14 +31,14 @@ import type { Socket } from "node:net";
 import type { Request } from "express";
 
 if (!existsSync(resolve(import.meta.dirname, "dist"))) {
-  console.log("Building the project...");
+  console.log("building the project...");
   await build(config as any);
 }
 
 const app = express();
 const server = createServer(app);
 
-const PORT = process.env.PORT || 9876;
+const PORT = Number(process.env.PORT) || 9876;
 
 app.use(express.static(resolve(import.meta.dirname, "dist")));
 app.use("/config", express.static(resolve(import.meta.dirname, "dist-config")));
@@ -63,7 +63,7 @@ Object.entries(servicePathMaps).forEach(([route, path]) => {
   app.use(route, express.static(path));
 });
 
-const rammerheadReverseProxy = process.env.REVERSE_PROXY || false;
+const rammerheadReverseProxy = Boolean(process.env.REVERSE_PROXY) || false;
 
 const rammerhead = createRammerhead({
   reverseProxy: rammerheadReverseProxy,
@@ -72,8 +72,8 @@ const rammerhead = createRammerhead({
 const bare = createBareServer("/bare/");
 
 app.use((req, res, next) => {
-  if (RammerheadRouting.shouldRouteRammerhead(req)) {
-    RammerheadRouting.routeRammerheadRequest(rammerhead, req, res);
+  if (RammerheadRouting.shouldRoute(req)) {
+    RammerheadRouting.routeRequest(rammerhead, req, res);
   } else if (bare.shouldRoute(req)) {
     bare.routeRequest(req, res);
   } else {
@@ -88,8 +88,8 @@ function shouldRouteWisp(req: Request, endingUrl?: string) {
 }
 
 server.on("upgrade", (req: Request, socket: Socket, head) => {
-  if (RammerheadRouting.shouldRouteRammerhead(req)) {
-    RammerheadRouting.routeRammerheadUpgrade(rammerhead, req, socket, head);
+  if (RammerheadRouting.shouldRoute(req)) {
+    RammerheadRouting.routeUpgrade(rammerhead, req, socket, head);
   } else if (bare.shouldRoute(req)) {
     bare.routeUpgrade(req, socket, head);
   } else if (shouldRouteWisp(req)) {
@@ -98,5 +98,5 @@ server.on("upgrade", (req: Request, socket: Socket, head) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
+  console.log(`server is running at http://localhost:${PORT}`);
 });

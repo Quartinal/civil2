@@ -20,7 +20,7 @@ const uvConfig: Partial<UVConfig> = {
   encodeUrl: encode,
   decodeUrl: decode,
   ...fileProps,
-  config: "/config/uv_config.js",
+  config: "/uv_config.js",
 };
 
 export default uvConfig;

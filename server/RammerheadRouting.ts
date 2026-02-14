@@ -3,7 +3,7 @@ import type { Socket } from "node:net";
 import type { Server } from "node:http";
 
 export default class RammerheadRouting {
-  static #rammerheadScopes: Array<string> & { length: 15 } = [
+  static #scopes: Array<string> & { length: 15 } = [
     "/rammerhead.js",
     "/hammerhead.js",
     "/transport-worker.js",
@@ -21,23 +21,19 @@ export default class RammerheadRouting {
     "/mainport",
   ];
 
-  static shouldRouteRammerhead(req: Request) {
+  static shouldRoute(req: Request) {
     const url = new URL(req.url, "http://0.0.0.0");
     return (
-      this.#rammerheadScopes.includes(url.pathname) ||
+      this.#scopes.includes(url.pathname) ||
       url.pathname.match(/^\/[a-z0-9]{32}/)
     );
   }
 
-  static routeRammerheadRequest(
-    rammerhead: Server,
-    req: Request,
-    res: Response,
-  ) {
+  static routeRequest(rammerhead: Server, req: Request, res: Response) {
     rammerhead.emit("request", req, res);
   }
 
-  static routeRammerheadUpgrade(
+  static routeUpgrade(
     rammerhead: Server,
     req: Request,
     socket: Socket,

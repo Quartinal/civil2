@@ -5,6 +5,7 @@ if [ ! -d "node_modules" ]; then
   pnpm install
 fi
 
+pnpm build:config
 pnpm build
 
 cd misc/protectors

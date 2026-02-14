@@ -1,4 +1,5 @@
 import typescript from "rollup-plugin-typescript2";
+import copy from "rollup-plugin-copy";
 import terser from "@rollup/plugin-terser";
 import alias from "@rollup/plugin-alias";
 import fastGlobModule from "fast-glob";
@@ -13,13 +14,14 @@ const configFiles = fastGlobSync([
   "config/**/*.config.js",
 ]);
 
-const input = Object.fromEntries(
-  configFiles.map(file => {
+const input = Object.fromEntries([
+  ...configFiles.map(file => {
     const base = basename(file).replace(/\.(config)\.(ts|js)$/, "");
     const name = `${base}_config`;
     return [name, file];
   }),
-);
+  ["sw", "config/service/sw.ts"],
+]);
 
 /** @type {import("rollup").RollupOptions} */
 export default {
@@ -41,10 +43,13 @@ export default {
         compilerOptions: {
           allowImportingTsExtensions: false,
         },
-        exclude: ["src"],
+        exclude: ["src", "server.ts"],
       },
     }),
     terser(),
+    copy({
+      targets: [{ src: "misc/encoder/xor_encoder.wasm", dest: "dist-config" }],
+    }),
   ],
   output: {
     dir: "dist-config",

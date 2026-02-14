@@ -1,0 +1,27 @@
+[chatgpt]
+url = "https://chatgpt.com"
+icon = "https://static.vecteezy.com/system/resources/previews/024/558/807/non_2x/openai-chatgpt-logo-icon-free-png.png"
+
+[github]
+url = "https://github.com"
+icon = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Octicons-mark-github.svg/960px-Octicons-mark-github.svg.png"
+
+[discord]
+url = "https://discord.com"
+icon = "https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/67d00cf7266d2c75571aebde_Example.svg"
+
+[amazon]
+url = "https://www.amazon.com"
+icon = "https://i.pinimg.com/736x/29/f6/41/29f641b507ccb60bb7a62a830b988736.jpg"
+
+[crunchbits]
+url = "https://crunchbits.com"
+icon = "https://media.licdn.com/dms/image/v2/D563DAQFhWX8KTMMOMw/image-scale_191_1128/B56ZgYzNXxHcAg-/0/1752762734392/crunchbits_cover?e=2147483647&v=beta&t=woFqRvkkzc2AtbS_bqJOnTq8C3sVB1Dhds8sKYp9bPc"
+
+[blooket_cheats]
+url = "https://github.com/Coding4Hours/Blooket-Cheats"
+icon = "https://1000logos.net/wp-content/uploads/2022/05/Blooket-Emblem.png"
+
+[hetzner]
+url = "http://hetzner.com"
+icon = "https://www.svgrepo.com/show/331425/hetzner.svg"
