@@ -22,6 +22,7 @@ import { logging, server as wisp } from "@mercuryworkshop/wisp-js/server";
 import { createBareServer } from "@tomphttp/bare-server-node";
 
 import RammerheadRouting from "./server/RammerheadRouting.ts";
+import useRoutes from "./server/routing.ts";
 
 import { build } from "@farmfe/core";
 
@@ -41,7 +42,7 @@ const server = createServer(app);
 const PORT = Number(process.env.PORT) || 9876;
 
 app.use(express.static(resolve(import.meta.dirname, "dist")));
-app.use("/config", express.static(resolve(import.meta.dirname, "dist-config")));
+app.use(express.static(resolve(import.meta.dirname, "dist-config")));
 app.use(compression());
 
 const libcurlPath = resolve(
@@ -80,6 +81,8 @@ app.use((req, res, next) => {
     next();
   }
 });
+
+useRoutes(app);
 
 logging.set_level(logging.ERROR);
 

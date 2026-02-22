@@ -4,8 +4,10 @@ export default class App extends EventEmitter {
   url: (URL | string) | null = null;
   onOpen: ((url: URL | string) => void) | null = null;
 
-  constructor() {
+  constructor(url?: URL | string, onOpen?: (url: URL | string) => void) {
     super();
+    this.url = url || null;
+    this.onOpen = onOpen || null;
   }
 
   open(url: URL | string) {

@@ -15,9 +15,16 @@ type Apps = Record<string, App>;
 function parseToObject(fileName: string): Apps {
   const fileIndex = argvSplitted.indexOf(fileName);
 
+  const __dirname = import.meta.dirname.endsWith("server")
+    ? import.meta.dirname
+    : resolve(import.meta.dirname, "server");
+
   if (fileIndex === -1) {
     const fileArg = "apps.toml";
-    const contents = readFileSync(resolve(".", "config", fileArg), "utf8");
+    const contents = readFileSync(
+      resolve(__dirname, ".", "config", fileArg),
+      "utf8",
+    );
     return parseToml(contents) as Apps;
   }
 
@@ -33,7 +40,10 @@ function parseToObject(fileName: string): Apps {
     throw new Error(`unsupported file type: ${extension}`);
   }
 
-  const contents = readFileSync(resolve(".", "config", fileArg), "utf8");
+  const contents = readFileSync(
+    resolve(__dirname, ".", "config", fileArg),
+    "utf8",
+  );
 
   return extension === ".toml"
     ? (parseToml(contents) as Apps)
@@ -53,7 +63,7 @@ if (argvSplitted.includes("dev")) {
 
 export default function useRoutes(app: Express) {
   // apps
-  app.use("/apps/", (_, res) => {
+  app.use("/apps", (_, res) => {
     res.json(Object.values(apps));
   });
 }
