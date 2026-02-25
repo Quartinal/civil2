@@ -1,14 +1,8 @@
-import usePageLoading from "~/lib/usePageLoading";
-import Loading from "~/components/Loading";
-import StatsForNerds from "~/components/StatsForNerds";
-import "@fontsource/rubik/700.css";
+import { router } from "./router";
+import { RouterProvider } from "@tanstack/solid-router";
+
+import "./app.css";
 
 export default function App() {
-  const { isLoading, pageLoadId } = usePageLoading();
-
-  if (isLoading) {
-    return <Loading key={pageLoadId ?? "loading"} />;
-  }
-
-  return <StatsForNerds />;
+  return <RouterProvider router={router} />;
 }

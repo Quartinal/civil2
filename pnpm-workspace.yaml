@@ -1,6 +1,0 @@
-onlyBuiltDependencies:
-  - '@mercuryworkshop/scramjet'
-  - bufferutil
-  - core-js
-  - esbuild
-  - rammerhead
