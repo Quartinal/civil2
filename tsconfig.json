@@ -13,7 +13,10 @@
     "types": ["vinxi/types/client"],
     "isolatedModules": true,
     "paths": {
-      "~/*": ["./src/*"]
-    }
+      "~/*": ["./src/*"],
+      "$wasm/*": ["config/rammerheadenc/dist/*", "config/encoder/*"]
+    },
+    "baseUrl": ".",
+    "allowImportingTsExtensions": true
   }
 }

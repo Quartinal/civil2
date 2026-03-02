@@ -1,22 +1,49 @@
 {
   "name": "with-tanstack-router",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vinxi dev",
     "build": "vinxi build",
-    "start": "vinxi start",
+    "start": "bun server.ts",
     "version": "vinxi version",
     "format": "biome format --write"
   },
   "dependencies": {
+    "@catppuccin/palette": "^1.7.1",
+    "@fontsource/rubik": "^5.2.8",
+    "@lottiefiles/dotlottie-solid": "^0.6.3",
+    "@mercuryworkshop/bare-mux": "^2.1.8",
+    "@mercuryworkshop/bare-transport": "^1.0.0",
+    "@mercuryworkshop/epoxy-transport": "^3.0.1",
+    "@mercuryworkshop/libcurl-transport": "^2.0.5",
+    "@mercuryworkshop/scramjet": "https://github.com/MercuryWorkshop/scramjet/releases/download/latest/mercuryworkshop-scramjet-2.0.0-alpha.tgz",
+    "@mercuryworkshop/wisp-js": "^0.4.1",
+    "@solidjs/start": "^1.2.0",
+    "@tanstack/router-plugin": "^1.135.2",
     "@tanstack/solid-router": "^1.135.2",
     "@tanstack/solid-router-devtools": "^1.135.2",
-    "@tanstack/router-plugin": "^1.135.2",
-    "@solidjs/start": "^1.2.0",
+    "@titaniumnetwork-dev/ultraviolet": "^3.2.10",
+    "@tomphttp/bare-server-node": "^2.0.6",
+    "classix": "^2.2.8",
+    "compression": "^1.8.1",
+    "express": "^5.2.1",
+    "picocolors": "^1.1.1",
+    "rammerhead": "https://github.com/civilnetwork-dev/rammerhead-443/releases/download/v1.2.64/rammerhead-1.2.64.tgz",
     "solid-js": "^1.9.10",
     "vinxi": "^0.5.8"
   },
-  "engines": {
-    "node": ">=22"
-  }
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.4",
+    "@types/compression": "^1.8.1",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.3.3",
+    "autoprefixer": "^10.4.27",
+    "cssnano": "^7.1.2",
+    "postcss": "^8.5.6",
+    "postcss-preset-env": "^11.2.0"
+  },
+  "trustedDependencies": [
+    "rammerhead"
+  ]
 }

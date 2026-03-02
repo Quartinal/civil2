@@ -30,4 +30,5 @@ Thumbs.db
 # lockfiles
 pnpm-lock.yaml
 pnpm-workspace.yaml
-bun.lock
+
+routeTree.gen.ts

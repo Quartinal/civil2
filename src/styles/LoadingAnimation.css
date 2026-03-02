@@ -1,0 +1,47 @@
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background-color: var(--ctp-macchiato-base);
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  width: 100%;
+  height: 100vh;
+}
+
+.loading-lottie {
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-lottie canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.loading-status-wrapper {
+  font-family: "Rubik", sans-serif;
+  font-weight: 500;
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+  color: var(--ctp-macchiato-subtext1);
+  text-align: center;
+  min-width: 260px;
+}
+
+.loading-status {
+  transition: opacity 400ms cubic-bezier(0.86, 0, 0.07, 1);
+}
+
+.loading-status.shown {
+  opacity: 1;
+}
+
+.loading-status.hidden {
+  opacity: 0;
+}
