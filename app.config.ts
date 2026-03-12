@@ -4,8 +4,10 @@ import postcssConfig from "./postcss.config.js";
 
 export default defineConfig({
   vite: {
-    // @ts-expect-error
-    plugins: [tanstackRouter({ target: "solid" })],
+    plugins: [
+      // @ts-expect-error
+      tanstackRouter({ target: "solid" }),
+    ],
     css: {
       postcss: postcssConfig,
     },

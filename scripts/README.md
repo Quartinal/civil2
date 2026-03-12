@@ -1,0 +1,1 @@
+just some scripts. most of these are just for the sake of my own personal productivity.

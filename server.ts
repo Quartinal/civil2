@@ -36,7 +36,7 @@ import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
 import { logging, server as wisp } from "@mercuryworkshop/wisp-js/server";
 import { createBareServer } from "@tomphttp/bare-server-node";
 
-import type { NextFunction, Request, Response } from "express";
+import type { Request, Response } from "express";
 import type { Socket } from "node:net";
 import type { Server } from "node:http";
 
@@ -143,6 +143,7 @@ app.use((req, res, next) => {
 const { handler: ssrHandler } = await import("./.output/server/index.mjs");
 
 app.use(express.static(resolve(import.meta.dirname, ".output/public")));
+app.use(express.static(resolve(import.meta.dirname, "dist")));
 app.use(ssrHandler);
 
 function shouldRouteWisp(req: Request, endingUrl?: string) {

@@ -1,16 +1,10 @@
-import { createSignal, createEffect, onCleanup } from "solid-js";
-import { clientOnly } from "@solidjs/start";
+import { createSignal, onMount, onCleanup } from "solid-js";
 import "@catppuccin/palette/css/catppuccin.css";
 import "@fontsource/rubik/400.css";
 import "@fontsource/rubik/500.css";
 import cx from "classix";
 import "~/styles/LoadingAnimation.css";
-
-const DotLottieSolid = clientOnly(() =>
-  import("@lottiefiles/dotlottie-solid").then(m => ({
-    default: m.DotLottieSolid,
-  })),
-);
+import { DotLottie } from "@lottiefiles/dotlottie-web";
 
 interface LoadingAnimationProps {
   iframed?: boolean;
@@ -32,7 +26,7 @@ export default function LoadingAnimation({ iframed }: LoadingAnimationProps) {
           "Getting proxy from localStorage",
           "Setting up SW and BareMux",
           "Connecting to WISP server",
-          `Registering SW ${localStorage.getItem("sw")}`,
+          `Registering SW ${typeof window !== "undefined" ? localStorage.getItem("sw") : ""}`,
           "Fetching ScramJet configuration",
           "Fetching UV configuration",
         ]
@@ -45,13 +39,27 @@ export default function LoadingAnimation({ iframed }: LoadingAnimationProps) {
 
   const [currentIndex, setCurrentIndex] = createSignal(0);
   const [visible, setVisible] = createSignal(true);
+  let containerRef: HTMLDivElement | undefined;
 
-  createEffect(() => {
+  onMount(() => {
+    if (!containerRef) return;
+
+    const anim = new DotLottie({
+      autoplay: true,
+      loop: true,
+      canvas: document.createElement("canvas"),
+      src: "/assets/civil-loading.lottie",
+    });
+
+    containerRef.appendChild(anim.canvas as Node);
+
+    let aborted = false;
     let timeout: ReturnType<typeof setTimeout>;
 
     const cycle = () => {
       setVisible(false);
       timeout = setTimeout(() => {
+        if (aborted) return;
         setCurrentIndex(i => (i + 1) % statuses.length);
         setVisible(true);
         timeout = setTimeout(cycle, DISPLAY_DURATION + FADE_DURATION);
@@ -59,27 +67,22 @@ export default function LoadingAnimation({ iframed }: LoadingAnimationProps) {
     };
 
     timeout = setTimeout(cycle, DISPLAY_DURATION);
-    onCleanup(() => clearTimeout(timeout));
+
+    onCleanup(() => {
+      aborted = true;
+      clearTimeout(timeout);
+      anim.destroy();
+    });
   });
 
   return (
-    <>
-      <div class={cx("loading-container", iframed && "iframed")}>
-        <div class="loading-lottie">
-          <DotLottieSolid
-            src="/assets/civil-loading.lottie"
-            autoplay
-            loop
-            style={{ width: "100%", height: "100%" }}
-          />
-        </div>
-
-        <div class="loading-status-wrapper">
-          <span class={cx("loading-status", visible() ? "shown" : "hidden")}>
-            {statuses[currentIndex()]}
-          </span>
-        </div>
+    <div class={cx("loading-container", iframed && "iframed")}>
+      <div class="loading-lottie" ref={containerRef} />
+      <div class="loading-status-wrapper">
+        <span class={cx("loading-status", visible() ? "shown" : "hidden")}>
+          {statuses[currentIndex()]}
+        </span>
       </div>
-    </>
+    </div>
   );
 }

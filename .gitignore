@@ -32,3 +32,4 @@ pnpm-lock.yaml
 pnpm-workspace.yaml
 
 routeTree.gen.ts
+auto-imports.d.ts

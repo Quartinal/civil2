@@ -1,0 +1,59 @@
+#!/usr/bin/env bun
+
+import fs from "node:fs";
+import path from "node:path";
+import pc from "picocolors";
+
+const MODEL_MAP = {
+  "sonnet": "anthropic-claude-sonnet-4.6",
+  "opus": "anthropic-claude-opus-4.6",
+};
+
+const args = process.argv.slice(2);
+const get = (flag) => { const i = args.indexOf(flag); return i === -1 ? null : args[i + 1]; };
+
+const fileArg = get("--file");
+const promptArg = get("--prompt");
+const modelArg = get("--model");
+
+if (!fileArg && !promptArg) {
+  console.log(pc.red("error: --file or --prompt required"));
+  process.exit(1);
+}
+
+let filePaths = [];
+if (fileArg) {
+  filePaths = fileArg.split(",").map((f) => path.resolve(f.trim()));
+
+  for (const filePath of filePaths) {
+    if (!fs.existsSync(filePath)) {
+      console.log(pc.red(`file not found: ${filePath}`));
+      process.exit(1);
+    }
+  }
+
+  console.log(pc.green("files:"), pc.cyan(filePaths.join(", ")));
+}
+
+if (promptArg) console.log(pc.green("prompt:"), pc.cyan(promptArg));
+
+const resolvedModel = modelArg ? (MODEL_MAP[modelArg.toLowerCase()] ?? modelArg) : null;
+if (resolvedModel) console.log(pc.green("model:"), pc.yellow(resolvedModel));
+
+const params = new URLSearchParams();
+if (promptArg) params.set("input", promptArg);
+if (filePaths.length) params.set("files", filePaths.join(","));
+if (resolvedModel) params.set("model", resolvedModel);
+
+const url = `chatwise://chat?${params.toString()}`;
+console.log(pc.magenta("\nlaunching chatwise..."));
+console.log(pc.gray(url));
+
+const opener = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
+
+try {
+  await Bun.spawn([opener, url], { stdout: "inherit", stderr: "inherit" }).exited;
+  console.log(pc.green("chatwise opened."));
+} catch {
+  console.log(pc.red("failed to open chatwise."));
+}

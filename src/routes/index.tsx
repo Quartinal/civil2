@@ -1,11 +1,5 @@
 import { createFileRoute } from "@tanstack/solid-router";
-import {
-  Suspense,
-  createSignal,
-  createEffect,
-  onCleanup,
-  Show,
-} from "solid-js";
+import { createSignal, onMount, onCleanup, Show } from "solid-js";
 import LoadingAnimation from "~/components/LoadingAnimation";
 
 export const Route = createFileRoute("/")({
@@ -20,17 +14,23 @@ function TimedLoadingAnimation() {
   const [overlayVisible, setOverlayVisible] = createSignal(true);
   const [mounted, setMounted] = createSignal(true);
 
-  const exit = () => {
-    setOverlayVisible(false);
-    setTimeout(() => setMounted(false), EXIT_DURATION);
-  };
+  onMount(() => {
+    let unmountTimeout: ReturnType<typeof setTimeout>;
 
-  createEffect(() => {
-    const minTimeout = setTimeout(() => exit(), MIN_DURATION);
-    const maxTimeout = setTimeout(() => exit(), MAX_DURATION);
+    const exit = () => {
+      clearTimeout(minTimeout);
+      clearTimeout(maxTimeout);
+      setOverlayVisible(false);
+      unmountTimeout = setTimeout(() => setMounted(false), EXIT_DURATION);
+    };
+
+    const minTimeout = setTimeout(exit, MIN_DURATION);
+    const maxTimeout = setTimeout(exit, MAX_DURATION);
+
     onCleanup(() => {
       clearTimeout(minTimeout);
       clearTimeout(maxTimeout);
+      clearTimeout(unmountTimeout);
     });
   });
 
@@ -49,9 +49,14 @@ function TimedLoadingAnimation() {
 }
 
 function RouteComponent() {
+  onMount(async () => {
+    await import("~/lib/initializeAnalytics.ts");
+  });
+
   return (
-    <Suspense fallback={<TimedLoadingAnimation />}>
+    <>
+      <TimedLoadingAnimation />
       <main></main>
-    </Suspense>
+    </>
   );
 }
