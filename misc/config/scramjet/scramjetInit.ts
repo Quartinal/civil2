@@ -10,24 +10,22 @@ const proxyPath = genProxyPath("/", "scramjet");
 const spf = `${proxyPath}scramjet.`;
 
 const config = new ScramjetController({
-  prefix: proxyPath,
-  files: {
-    wasm: `${spf}wasm.wasm`,
-    all: `${spf}all.js`,
-    sync: `${spf}sync.js`,
-  },
-  flags: {
-    rewriterLogs: false,
-    scramitize: false,
-    cleanErrors: true,
-    sourcemaps: true,
-  },
-  codec: {
-    encode,
-    decode,
-  },
+    prefix: proxyPath,
+    files: {
+        wasm: `${spf}wasm.wasm`,
+        all: `${spf}all.js`,
+        sync: `${spf}sync.js`,
+    },
+    flags: {
+        rewriterLogs: false,
+        scramitize: false,
+        cleanErrors: true,
+        sourcemaps: true,
+    },
+    codec: {
+        encode,
+        decode,
+    },
 });
 
 window.scramjet = config;
-
-export {};

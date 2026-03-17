@@ -4,20 +4,20 @@ import { clientOnly } from "@solidjs/start";
 import { Suspense } from "solid-js";
 
 const Devtools = import.meta.env.DEV
-  ? clientOnly(() => import("../components/Devtools"))
-  : () => null;
+    ? clientOnly(() => import("../components/Devtools"))
+    : () => null;
 
 export const Route = createRootRoute({
-  component: RootComponent,
+    component: RootComponent,
 });
 
 function RootComponent() {
-  return (
-    <>
-      <Suspense>
-        <Outlet />
-        <Devtools />
-      </Suspense>
-    </>
-  );
+    return (
+        <>
+            <Suspense>
+                <Outlet />
+                <Devtools />
+            </Suspense>
+        </>
+    );
 }

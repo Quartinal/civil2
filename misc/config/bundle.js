@@ -13,13 +13,13 @@ const { globSync: fastGlobSync } = require("fast-glob");
 const configFiles = fastGlobSync(["./**/*.config.ts", "./**/*.config.js"]);
 
 const input = Object.fromEntries([
-  ...configFiles.map(file => {
-    const base = basename(file).replace(/\.(config)\.(ts|js)$/, "");
-    const name = `${base}_config`;
-    return [name, file];
-  }),
-  ["sw", "./service/sw.ts"],
-  ["scramjet_init", "./scramjet/scramjetInit.ts"],
+    ...configFiles.map(file => {
+        const base = basename(file).replace(/\.(config)\.(ts|js)$/, "");
+        const name = `${base}_config`;
+        return [name, file];
+    }),
+    ["sw", "./service/sw.ts"],
+    ["scramjet_init", "./scramjet/scramjetInit.ts"],
 ]);
 
 const { green } = createColors();
@@ -27,29 +27,29 @@ const { green } = createColors();
 await rimraf("../../dist");
 
 const result = await build({
-  entryPoints: input,
-  treeShaking: true,
-  minify: true,
-  tsconfigRaw: JSON.stringify({
-    ...tsconfig,
-    compilerOptions: {
-      ...tsconfig.compilerOptions,
-      baseUrl: "../..",
-    },
-  }),
-  bundle: true,
-  target: "esnext",
-  platform: "browser",
-  format: "esm",
-  outdir: "../../dist",
-  metafile: true,
+    entryPoints: input,
+    treeShaking: true,
+    minify: true,
+    tsconfigRaw: JSON.stringify({
+        ...tsconfig,
+        compilerOptions: {
+            ...tsconfig.compilerOptions,
+            baseUrl: "../..",
+        },
+    }),
+    bundle: true,
+    target: "esnext",
+    platform: "browser",
+    format: "esm",
+    outdir: "../../dist",
+    metafile: true,
 });
 
 await copyFile(
-  "../../config/encoder/xor_encoder.wasm",
-  "../../dist/xor_encoder.wasm",
+    "../../config/encoder/xor_encoder.wasm",
+    "../../dist/xor_encoder.wasm",
 );
 
 for (const file of Object.keys(result.metafile.outputs)) {
-  console.log(green(basename(file)));
+    console.log(green(basename(file)));
 }

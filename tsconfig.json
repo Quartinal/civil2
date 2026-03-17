@@ -1,23 +1,24 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "jsx": "preserve",
-    "jsxImportSource": "solid-js",
-    "allowJs": true,
-    "strict": true,
-    "noEmit": true,
-    "types": ["vinxi/types/client"],
-    "isolatedModules": true,
-    "paths": {
-      "~/*": ["./src/*"],
-      "$wasm/*": ["config/rammerheadenc/dist/*", "config/encoder/*"],
-      "$config/*": ["misc/config/*"]
-    },
-    "baseUrl": ".",
-    "allowImportingTsExtensions": true
-  }
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "jsx": "preserve",
+        "jsxImportSource": "solid-js",
+        "allowJs": true,
+        "strict": true,
+        "noEmit": true,
+        "types": ["vinxi/types/client", "bun"],
+        "isolatedModules": true,
+        "paths": {
+            "~/*": ["./src/*"],
+            "$wasm/*": ["config/rammerheadenc/dist/*", "config/encoder/*"],
+            "$config/*": ["misc/config/*"],
+            "$tests/*": ["tests/*"]
+        },
+        "baseUrl": ".",
+        "allowImportingTsExtensions": true
+    }
 }

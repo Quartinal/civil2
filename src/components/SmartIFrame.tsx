@@ -4,24 +4,26 @@ import proxyObjMap from "~/lib/proxyObjMap";
 import { track } from "@plausible-analytics/tracker";
 
 export default function SmartIFrame(props: { src: string }) {
-  const [src, setSrc] = createSignal(props.src);
+    const [src, setSrc] = createSignal(props.src);
 
-  createEffect(() => {
-    const proxyName = localStorage.getItem("proxy");
+    createEffect(() => {
+        const proxyName = localStorage.getItem("proxy");
 
-    const proxy = proxyObjMap.find(({ name }) => name === proxyName);
+        const proxy = proxyObjMap.find(({ name }) => name === proxyName);
 
-    const encode = proxy?.value.encodeUrl ?? window.scramjet.encodeUrl;
-    const decode = proxy?.value.decodeUrl ?? window.scramjet.decodeUrl;
+        const encode =
+            proxy?.getValue()?.encodeUrl ?? window.scramjet.encodeUrl;
+        const decode =
+            proxy?.getValue()?.decodeUrl ?? window.scramjet.decodeUrl;
 
-    const encoded = encode(props.src);
+        const encoded = encode(props.src);
 
-    setSrc(encoded);
+        setSrc(encoded);
 
-    track("Internal site visit", {
-      props: { url: decode(props.src) },
+        track("Internal site visit", {
+            props: { url: decode(props.src) },
+        });
     });
-  });
 
-  return <iframe src={src()} class="smart-iframe" />;
+    return <iframe src={src()} class="smart-iframe" />;
 }

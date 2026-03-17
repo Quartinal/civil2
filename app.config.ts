@@ -1,5 +1,6 @@
 import { defineConfig } from "@solidjs/start/config";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
+import tsconfigPaths from "vite-tsconfig-paths";
 import postcssConfig from "./postcss.config.js";
 
 export default defineConfig({
@@ -7,6 +8,7 @@ export default defineConfig({
     plugins: [
       // @ts-expect-error
       tanstackRouter({ target: "solid" }),
+      tsconfigPaths(),
     ],
     css: {
       postcss: postcssConfig,
