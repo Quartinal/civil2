@@ -12,26 +12,23 @@ function isUrlEncoded(string: string) {
 
 export const Route = createFileRoute("/go/$")({
     beforeLoad: ({ params }: { params: any }) => {
+        if (typeof window === "undefined") return;
+
         const { _splat } = params;
         const url = isUrlEncoded(_splat) ? decodeURIComponent(_splat) : _splat;
 
-        let proxyName = "scramjet";
-        let encode: ((url: string) => string) | undefined;
+        const proxyName = localStorage.getItem("proxy") ?? "scramjet";
+        const proxyEncodeFunction = proxyObjMap.find(
+            ({ name }) => name === proxyName,
+        );
+        const encode =
+            proxyEncodeFunction?.getValue()?.encodeUrl ??
+            window.scramjet?.encodeUrl;
 
-        if (typeof window !== "undefined") {
-            proxyName = localStorage.getItem("proxy") ?? "scramjet";
-            const proxyEncodeFunction = proxyObjMap.find(
-                ({ name }) => name === proxyName,
-            );
-            encode =
-                proxyEncodeFunction?.getValue()?.encodeUrl ??
-                window.scramjet.encodeUrl;
+        if (!encode) return;
 
-            throw redirect({
-                href: encode(url),
-            });
-        }
-
-        return;
+        throw redirect({
+            href: encode(url),
+        });
     },
 });

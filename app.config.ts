@@ -4,17 +4,17 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import postcssConfig from "./postcss.config.js";
 
 export default defineConfig({
-  vite: {
-    plugins: [
-      // @ts-expect-error
-      tanstackRouter({ target: "solid" }),
-      tsconfigPaths(),
-    ],
-    css: {
-      postcss: postcssConfig,
+    vite: {
+        plugins: [
+            // @ts-expect-error
+            tanstackRouter({ target: "solid" }),
+            tsconfigPaths(),
+        ],
+        css: {
+            postcss: postcssConfig,
+        },
     },
-  },
-  server: {
-    preset: "node",
-  },
+    server: {
+        preset: "node",
+    },
 });

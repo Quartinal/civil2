@@ -91,14 +91,13 @@ class RammerheadRouting {
     }
 }
 
-import { execSync } from "node:child_process";
+import { $ } from "bun";
 
 import { createColors } from "picocolors";
 
 const { yellow, blue } = createColors();
 
-const build = () =>
-    execSync(`bunx ${packageJson.scripts.build}`, { stdio: "inherit" });
+const build = () => $`bunx ${packageJson.scripts.build}`;
 
 if (
     !(
@@ -112,7 +111,7 @@ if (
 
 const app = express();
 const server = createServer(app);
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ noServer: true });
 
 const GOOGLE_URL =
     "https://clients1.google.com/complete/search?hl=en&output=toolbar&q=";
@@ -134,6 +133,8 @@ Object.entries(servicePathMaps).forEach(([route, path]) => {
 });
 
 const rammerheadReverseProxy = Boolean(process.env.REVERSE_PROXY) || false;
+
+process.removeAllListeners("uncaughtException");
 
 const rammerhead = createRammerhead({
     reverseProxy: rammerheadReverseProxy,
@@ -164,14 +165,14 @@ const parser = new XMLParser({
 wss.on("connection", ws => {
     ws.on("message", async (message: Buffer) => {
         try {
-            const q = encodeURIComponent(message.toString());
-            const url = `${GOOGLE_URL}${q}`;
+            const { q } = JSON.parse(message.toString());
+            const url = `${GOOGLE_URL}${encodeURIComponent(q)}`;
 
             const { data } = await xior.get(url, { responseType: "text" });
             const json = parser.parse(data);
-            const suggestions = json.toplevel.CompleteSuggestion.map(
-                (s: any) => s.suggestion.data,
-            );
+            const raw = json.toplevel.CompleteSuggestion;
+            const list = Array.isArray(raw) ? raw : [raw];
+            const suggestions = list.map((s: any) => s.suggestion.data);
 
             ws.send(JSON.stringify({ q: message.toString(), suggestions }));
         } catch (err: any) {

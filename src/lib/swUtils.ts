@@ -1,8 +1,8 @@
 import type * as _BareMux from "@mercuryworkshop/bare-mux";
 
-function registerSw() {
+async function registerSw() {
     if ("serviceWorker" in navigator) {
-        navigator.serviceWorker
+        await navigator.serviceWorker
             .register("/sw.js", {
                 scope: "/",
             })
@@ -13,6 +13,8 @@ function registerSw() {
             .catch(error => {
                 console.error("service Worker registration failed:", error);
             });
+
+        return;
     }
 
     console.log(
@@ -22,9 +24,9 @@ function registerSw() {
     localStorage.setItem("proxy", "rammerhead");
 }
 
-function unregisterSw() {
+async function unregisterSw() {
     if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.getRegistrations().then(registrations => {
+        await navigator.serviceWorker.getRegistrations().then(registrations => {
             registrations.forEach(registration => registration.unregister());
         });
     }

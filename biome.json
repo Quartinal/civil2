@@ -14,7 +14,8 @@
             "scripts/**",
             "misc/**",
             "server.ts",
-            "tsconfig.json"
+            "tsconfig.json",
+            "app.config.ts"
         ]
     },
     "linter": {

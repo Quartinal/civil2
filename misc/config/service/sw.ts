@@ -1,8 +1,9 @@
 ///<reference types="serviceworker" />
 
 import type { UVConfig } from "@titaniumnetwork-dev/ultraviolet";
-import genSwFilePath from "$config/shared/genSwFilePath";
 import type { ScramjetController } from "@mercuryworkshop/scramjet";
+import { init, encode, decode } from "$config/shared/wasmDencode";
+import genProxyPath from "$config/shared/genProxyPath";
 
 declare global {
     interface Window {
@@ -12,21 +13,9 @@ declare global {
     }
 }
 
-const proxyFiles = {
-    uv: ["uv.handler.js", "uv.client.js", "uv.bundle.js", "uv.sw.js"],
-    scramjet: ["scramjet.all.js"],
-};
-
-importScripts("/uv_config.js");
-
-Object.entries(proxyFiles).forEach(([proxy, [file]]) => {
-    importScripts(genSwFilePath(proxy, file));
-});
-
-const serviceWorkers = {
-    uv: new self.UVServiceWorker(),
-    scramjet: new ($scramjetLoadWorker().ScramjetServiceWorker)(),
-};
+importScripts("/uv/uv.bundle.js");
+importScripts("/uv/uv.sw.js");
+importScripts("/scramjet/scramjet.all.js");
 
 if (navigator.userAgent.includes("Firefox")) {
     Object.defineProperty(globalThis, "crossOriginIsolated", {
@@ -35,15 +24,40 @@ if (navigator.userAgent.includes("Firefox")) {
     });
 }
 
+const ready = init().then(() => {
+    const spf = genProxyPath("/", "uv");
+
+    const files = ["uv.handler.js", "uv.client.js", "uv.bundle.js", "uv.sw.js"];
+    const fileProps = Object.fromEntries(
+        files.map(file => {
+            const propName = file.split(".")[1];
+            return [propName, `${spf}${file}`];
+        }),
+    );
+
+    self.__uv$config = {
+        prefix: genProxyPath("/~/", "uv"),
+        encodeUrl: encode,
+        decodeUrl: decode,
+        ...fileProps,
+        config: "/uv_config.js",
+    };
+
+    return {
+        uv: new self.UVServiceWorker(),
+        scramjet: new ($scramjetLoadWorker().ScramjetServiceWorker)(),
+    };
+});
+
 async function swResponse(event: FetchEvent) {
-    const { uv, scramjet } = serviceWorkers;
+    const { uv, scramjet } = await ready;
 
     await scramjet.loadConfig();
 
     const { request } = event;
 
     if (
-        request.url.startsWith(window.location.origin + self.__uv$config.prefix)
+        request.url.startsWith(self.location.origin + self.__uv$config.prefix)
     ) {
         return await uv.fetch(event);
     } else if (scramjet.route(event)) {

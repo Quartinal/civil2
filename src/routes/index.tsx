@@ -1,12 +1,9 @@
 import { createFileRoute } from "@tanstack/solid-router";
 import { createSignal, onMount, onCleanup, Show } from "solid-js";
 import LoadingAnimation from "~/components/LoadingAnimation";
-import results from "$tests/bench_results.json" with { type: "json" };
 import { clientOnly } from "@solidjs/start";
 
-const BenchmarkChart = clientOnly(
-    () => import("~/components/BenchmarkChart.tsx"),
-);
+const SearchBar = clientOnly(() => import("~/components/SearchBar"));
 
 export const Route = createFileRoute("/")({
     component: RouteComponent,
@@ -63,7 +60,7 @@ function RouteComponent() {
         <>
             <TimedLoadingAnimation />
             <main>
-                <BenchmarkChart data={results} />
+                <SearchBar />
             </main>
         </>
     );

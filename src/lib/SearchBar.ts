@@ -1,6 +1,6 @@
 import { EventEmitter } from "tseep";
 import { registerSw, setupBareMux } from "./swUtils";
-import callFunctionOnContext from "./callFunctionOnContext";
+import { track } from "@plausible-analytics/tracker";
 import type { UVConfig } from "@titaniumnetwork-dev/ultraviolet";
 import type { ScramjetController } from "@mercuryworkshop/scramjet";
 import type * as _BareMux from "@mercuryworkshop/bare-mux";
@@ -45,12 +45,8 @@ class SearchBar
     constructor() {
         super();
 
-        // priority baremux setup and sw registration
-        registerSw();
-
-        (async () => {
-            await setupBareMux();
-        })();
+        setupBareMux().catch(console.error);
+        registerSw().catch(console.error);
 
         const isJson = (string: string) => {
             try {
@@ -88,12 +84,23 @@ class SearchBar
         const storedProxy = localStorage.getItem("proxy") as "uv" | "scramjet";
         const proxy = this.proxyObjMap.find(p => p.name === storedProxy)!;
 
+        const isUrl = (query: string) => {
+            try {
+                new URL(query);
+                return true;
+            } catch {
+                return false;
+            }
+        };
+
         this.on("submit", (frame, term) => {
-            callFunctionOnContext(
-                frame.contentWindow!,
-                proxy.value.encodeUrl,
-                term,
-            );
+            frame.contentWindow?.location.replace(`/go/${term}`);
+
+            track("Internal site visit", {
+                props: {
+                    url: isUrl(term) ? proxy.value.decodeUrl!(term) : term,
+                },
+            });
         });
 
         // TODO: add more event handlers

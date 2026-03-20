@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as BenchmarksRouteImport } from './routes/benchmarks'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GoSplatRouteImport } from './routes/go.$'
 
+const BenchmarksRoute = BenchmarksRouteImport.update({
+  id: '/benchmarks',
+  path: '/benchmarks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
@@ -32,35 +38,46 @@ const GoSplatRoute = GoSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/benchmarks': typeof BenchmarksRoute
   '/go/$': typeof GoSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/benchmarks': typeof BenchmarksRoute
   '/go/$': typeof GoSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/benchmarks': typeof BenchmarksRoute
   '/go/$': typeof GoSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/go/$'
+  fullPaths: '/' | '/about' | '/benchmarks' | '/go/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/go/$'
-  id: '__root__' | '/' | '/about' | '/go/$'
+  to: '/' | '/about' | '/benchmarks' | '/go/$'
+  id: '__root__' | '/' | '/about' | '/benchmarks' | '/go/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  BenchmarksRoute: typeof BenchmarksRoute
   GoSplatRoute: typeof GoSplatRoute
 }
 
 declare module '@tanstack/solid-router' {
   interface FileRoutesByPath {
+    '/benchmarks': {
+      id: '/benchmarks'
+      path: '/benchmarks'
+      fullPath: '/benchmarks'
+      preLoaderRoute: typeof BenchmarksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/about': {
       id: '/about'
       path: '/about'
@@ -88,6 +105,7 @@ declare module '@tanstack/solid-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  BenchmarksRoute: BenchmarksRoute,
   GoSplatRoute: GoSplatRoute,
 }
 export const routeTree = rootRouteImport
