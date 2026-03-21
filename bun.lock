@@ -10,7 +10,7 @@
         "@lottiefiles/dotlottie-web": "^0.65.0",
         "@mercuryworkshop/bare-mux": "^2.1.8",
         "@mercuryworkshop/bare-transport": "^1.0.0",
-        "@mercuryworkshop/epoxy-transport": "^3.0.1",
+        "@mercuryworkshop/epoxy-transport": "2.1.28",
         "@mercuryworkshop/libcurl-transport": "^2.0.5",
         "@mercuryworkshop/scramjet": "https://github.com/MercuryWorkshop/scramjet/releases/download/latest/mercuryworkshop-scramjet-2.0.0-alpha.tgz",
         "@mercuryworkshop/wisp-js": "^0.4.1",
@@ -333,9 +333,9 @@
 
     "@mercuryworkshop/bare-transport": ["@mercuryworkshop/bare-transport@1.0.0", "", { "dependencies": { "@mercuryworkshop/proxy-transports": "^1.0.2" } }, "sha512-Ij/54cpojl0rtr1Hcc4hdM9blhJk6xN/kWmvi46xuQa4pwRXIv8xa+ViVi0AIBg6q7KRKzz4PbsSaLZBJUD8dQ=="],
 
-    "@mercuryworkshop/epoxy-tls": ["@mercuryworkshop/epoxy-tls@2.1.19-1", "", {}, "sha512-lF3WVDmKDWfClgFaDm1OAGI6PStcUUKUjNh2AJbfmLXEGh+dT4nvsuTY2QGRImnajCboIRyrpx9eGNY0egZSVg=="],
+    "@mercuryworkshop/epoxy-tls": ["@mercuryworkshop/epoxy-tls@2.1.18-1", "", {}, "sha512-2N1BYn/+FJxIbRw+sipbl3mQPinRflqQDB9HGAXJEVj4Ok4FIlTlS4fO2cpXKEq5yoD3oaKb8GyNaQfndNui9w=="],
 
-    "@mercuryworkshop/epoxy-transport": ["@mercuryworkshop/epoxy-transport@3.0.1", "", { "dependencies": { "@mercuryworkshop/epoxy-tls": "2.1.19-1" } }, "sha512-8YzL73WaXZJLBRydmmY6NNPt5leB8ygBYuqgLn4+pGQ+wgi+JUC7ZdBQrA86TR6Oue3twbdfDvLRp48bzZ7DSw=="],
+    "@mercuryworkshop/epoxy-transport": ["@mercuryworkshop/epoxy-transport@2.1.28", "", { "dependencies": { "@mercuryworkshop/epoxy-tls": "2.1.18-1" } }, "sha512-lv/Kfdn37y8ZCXQaIT3Ebj4OSztBqeXdbR9rchbHQBKIw/fNSQJLGNBHV5ScXSzqt7NCwv8ZiZx7urRyk7Ua/Q=="],
 
     "@mercuryworkshop/libcurl-transport": ["@mercuryworkshop/libcurl-transport@2.0.5", "", { "dependencies": { "libcurl.js": "^0.7.4" } }, "sha512-YkAPEAWTEUZZkEOejmRQJxNHw90+kNQnoiSqa5H2sExHBXXdGSXEtg7/35A53U8MDVaznpAwjVbXRONSsfatzw=="],
 

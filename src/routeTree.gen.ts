@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as BenchmarksRouteImport } from './routes/benchmarks'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as GoSplatRouteImport } from './routes/go.$'
 
 const BenchmarksRoute = BenchmarksRouteImport.update({
   id: '/benchmarks',
@@ -29,44 +28,35 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GoSplatRoute = GoSplatRouteImport.update({
-  id: '/go/$',
-  path: '/go/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/benchmarks': typeof BenchmarksRoute
-  '/go/$': typeof GoSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/benchmarks': typeof BenchmarksRoute
-  '/go/$': typeof GoSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/benchmarks': typeof BenchmarksRoute
-  '/go/$': typeof GoSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/benchmarks' | '/go/$'
+  fullPaths: '/' | '/about' | '/benchmarks'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/benchmarks' | '/go/$'
-  id: '__root__' | '/' | '/about' | '/benchmarks' | '/go/$'
+  to: '/' | '/about' | '/benchmarks'
+  id: '__root__' | '/' | '/about' | '/benchmarks'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   BenchmarksRoute: typeof BenchmarksRoute
-  GoSplatRoute: typeof GoSplatRoute
 }
 
 declare module '@tanstack/solid-router' {
@@ -92,13 +82,6 @@ declare module '@tanstack/solid-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/go/$': {
-      id: '/go/$'
-      path: '/go/$'
-      fullPath: '/go/$'
-      preLoaderRoute: typeof GoSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -106,7 +89,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   BenchmarksRoute: BenchmarksRoute,
-  GoSplatRoute: GoSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

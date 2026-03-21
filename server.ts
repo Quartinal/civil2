@@ -184,7 +184,7 @@ wss.on("connection", ws => {
 app.use(ssrHandler);
 
 function shouldRouteWisp(req: Request, endingUrl?: string) {
-    return req.url?.endsWith(endingUrl || "/wisp");
+    return req.url?.endsWith(endingUrl || "/wisp/");
 }
 
 logging.set_level(logging.ERROR);

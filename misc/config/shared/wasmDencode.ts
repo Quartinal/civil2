@@ -1,65 +1,89 @@
 import xorDencode from "$wasm/xor_encoder.js";
 
-const textEncoder = new TextEncoder();
-const textDecoder = new TextDecoder();
-
-let scratch = new Uint8Array(4096);
 let module: any;
+let initPromise: Promise<void> | null = null;
+let _loggedEncode = false;
+let _loggedDecode = false;
 
-export async function init() {
-    module = await xorDencode();
-    (globalThis as any)["__civil_xorWasm__"] = {
-        mod: module,
-        scratch: new Uint8Array(4096),
-    };
+export function init(): Promise<void> {
+    if (initPromise) return initPromise;
+    const t0 = performance.now();
+    console.debug("[xorWasm] init start");
+    initPromise = xorDencode().then((mod: any) => {
+        module = mod;
+        (globalThis as any)["__civil_xorWasm__"] = {
+            mod: module,
+            scratch: new Uint8Array(4096),
+        };
+        console.debug(
+            `[xorWasm] ready in ${(performance.now() - t0).toFixed(1)}ms`,
+        );
+    });
+    return initPromise;
 }
 
-const heap = () => {
-    if (!module.cachedHeap || module.cachedHeap.buffer.byteLength === 0)
-        module.cachedHeap = module.HEAPU8;
-    return module.cachedHeap;
-};
-
-function writeToWasm(str: string) {
-    const maxBytes = str.length * 3;
-    if (scratch.length < maxBytes) scratch = new Uint8Array(maxBytes * 2);
-    const { written } = textEncoder.encodeInto(str, scratch);
-    const ptr = module.getInBuf(written);
-    heap().set(scratch.subarray(0, written), ptr);
-    return written;
-}
-
-function readFromWasm() {
-    const ptr = module.getOutBuf();
-    const len = module.outLen();
-    return textDecoder.decode(heap().subarray(ptr, ptr + len));
-}
+init();
 
 export const setSearchEngine = (engine: string) =>
     module.setSearchEngine(engine);
 export const setSearchTemplate = (template: string) =>
     module.setSearchTemplate(template);
 
-export function encode(str: string) {
-    if (!module)
-        throw new Error("xor_encoder not initialized. call init() first.");
-    const len = writeToWasm(str);
-    module.encodeBuf(len);
-    return readFromWasm();
+const _unreserved = (c: number) =>
+    (c >= 65 && c <= 90) ||
+    (c >= 97 && c <= 122) ||
+    (c >= 48 && c <= 57) ||
+    c === 45 ||
+    c === 95 ||
+    c === 46 ||
+    c === 126;
+
+function _jsDecode(str: string): string {
+    const b: number[] = [];
+    for (let i = 0; i < str.length; i++) {
+        if (str[i] === "%" && i + 2 < str.length) {
+            b.push(parseInt(str.slice(i + 1, i + 3), 16));
+            i += 2;
+        } else b.push(str.charCodeAt(i));
+    }
+    for (let i = 1; i < b.length; i += 2) b[i] ^= 0x02;
+    try {
+        return decodeURIComponent(String.fromCharCode(...b));
+    } catch {
+        return str;
+    }
 }
 
-export function decode(str: string) {
-    if (!module)
-        throw new Error("xor_encoder not initialized. call init() first.");
-    const len = writeToWasm(str);
-    module.decodeBuf(len);
-    return readFromWasm();
+function _jsEncode(str: string): string {
+    const HEX = "0123456789ABCDEF";
+    let s1 = "";
+    for (const b of new TextEncoder().encode(str))
+        s1 += _unreserved(b)
+            ? String.fromCharCode(b)
+            : "%" + HEX[b >> 4] + HEX[b & 0x0f];
+    const b = Array.from(s1, c => c.charCodeAt(0));
+    for (let i = 1; i < b.length; i += 2) b[i] ^= 0x02;
+    let out = "";
+    for (const c of b)
+        out += _unreserved(c)
+            ? String.fromCharCode(c)
+            : "%" + HEX[c >> 4] + HEX[c & 0x0f];
+    return out;
 }
 
-export function scramjetEncode(str: string) {
+function wasmEncode(str: string) {
     const state = (globalThis as any)["__civil_xorWasm__"];
-    if (!state)
-        throw new Error("xor_encoder not initialized. call init() first.");
+    if (!state) {
+        console.debug(
+            "[xorWasm] encode fallback (wasm not ready):",
+            str.slice(0, 40),
+        );
+        return _jsEncode(str);
+    }
+    if (!_loggedEncode) {
+        console.debug("[xorWasm] encode via wasm:", str.slice(0, 40));
+        _loggedEncode = true;
+    }
     const { mod } = state;
     const maxBytes = str.length * 3;
     if (state.scratch.length < maxBytes)
@@ -79,10 +103,19 @@ export function scramjetEncode(str: string) {
     );
 }
 
-export function scramjetDecode(str: string) {
+function wasmDecode(str: string) {
     const state = (globalThis as any)["__civil_xorWasm__"];
-    if (!state)
-        throw new Error("xor_encoder not initialized. call init() first.");
+    if (!state) {
+        console.debug(
+            "[xorWasm] decode fallback (wasm not ready):",
+            str.slice(0, 40),
+        );
+        return _jsDecode(str);
+    }
+    if (!_loggedDecode) {
+        console.debug("[xorWasm] decode via wasm:", str.slice(0, 40));
+        _loggedDecode = true;
+    }
     const { mod } = state;
     const maxBytes = str.length * 3;
     if (state.scratch.length < maxBytes)
@@ -101,3 +134,6 @@ export function scramjetDecode(str: string) {
         mod.cachedHeap.subarray(outPtr, outPtr + outLen),
     );
 }
+
+export const encode = wasmEncode;
+export const decode = wasmDecode;

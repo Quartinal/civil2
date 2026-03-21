@@ -62,11 +62,13 @@ async function setupBareMux() {
                 `/${transport}/index.mjs`,
                 sharedSetTransportOpts,
             );
+            console.log(`set transport to /${transport}/index.mjs with wisp`);
             break;
         case "baremod":
             await connection.setTransport("/baremod/index.mjs", [
                 genTechnologyUrl("bare"),
             ]);
+            console.log("set transport to /baremod/index.mjs with bare-server");
             break;
     }
 }

@@ -68,5 +68,5 @@ async function swResponse(event: FetchEvent) {
 }
 
 self.addEventListener("fetch", async (event: FetchEvent) => {
-    event.respondWith(await swResponse(event));
+    event.respondWith(swResponse(event));
 });

@@ -22,6 +22,10 @@ interface ISearchBar {
         currentProxy: "uv" | "scramjet" | "rammerhead";
     }>;
     proxyObjMap: ProxyEntry[];
+    searchEngineMap: {
+        name: string;
+        value: `${string}?q=%s`;
+    }[];
 }
 
 declare global {
@@ -38,6 +42,7 @@ class SearchBar
     url!: string;
     debugInfo!: ISearchBar["debugInfo"];
     proxyObjMap: ISearchBar["proxyObjMap"];
+    searchEngineMap: ISearchBar["searchEngineMap"];
 
     // not including proxyObjMap
     private static keys = ["lastUrlSearched", "url", "debugInfo"] as const;
@@ -45,8 +50,16 @@ class SearchBar
     constructor() {
         super();
 
-        setupBareMux().catch(console.error);
-        registerSw().catch(console.error);
+        const runSetup = async () => {
+            await setupBareMux();
+            await registerSw();
+        };
+
+        if (document.readyState === "complete") {
+            runSetup();
+        } else {
+            window.addEventListener("load", runSetup, { once: true });
+        }
 
         const isJson = (string: string) => {
             try {
@@ -69,11 +82,38 @@ class SearchBar
         this.proxyObjMap = [
             {
                 name: "uv",
-                value: self.__uv$config,
+                get value() {
+                    return self.__uv$config;
+                },
             },
             {
                 name: "scramjet",
-                value: window.scramjet,
+                get value() {
+                    return window.scramjet;
+                },
+            },
+        ];
+
+        this.searchEngineMap = [
+            {
+                name: "google",
+                value: "https://www.google.com/search?q=%s",
+            },
+            {
+                name: "ddg",
+                value: "https://duckduckgo.com/?q=%s",
+            },
+            {
+                name: "bing",
+                value: "https://www.bing.com/search?q=%s",
+            },
+            {
+                name: "brave",
+                value: "https://search.brave.com/search?q=%s",
+            },
+            {
+                name: "searx",
+                value: "https://searx.org/search?q=%s",
             },
         ];
 
@@ -81,9 +121,6 @@ class SearchBar
     }
 
     registerHandlers() {
-        const storedProxy = localStorage.getItem("proxy") as "uv" | "scramjet";
-        const proxy = this.proxyObjMap.find(p => p.name === storedProxy)!;
-
         const isUrl = (query: string) => {
             try {
                 new URL(query);
@@ -94,7 +131,27 @@ class SearchBar
         };
 
         this.on("submit", (frame, term) => {
-            frame.contentWindow?.location.replace(`/go/${term}`);
+            const storedProxy =
+                (localStorage.getItem("proxy") as "uv" | "scramjet") ||
+                "scramjet";
+            const proxy = this.proxyObjMap.find(p => p.name === storedProxy)!;
+
+            const normalizedTerm = (
+                proxy.name === "scramjet"
+                    ? this.searchEngineMap
+                          .find(
+                              eng =>
+                                  eng.name ===
+                                  (localStorage.getItem("search") || "google"),
+                          )
+                          ?.value.replace("%s", term)
+                    : term
+            )!;
+
+            frame.contentWindow?.location.replace(
+                (proxy.name === "uv" ? "/~/uv/" : "") +
+                    proxy.value.encodeUrl!(normalizedTerm),
+            );
 
             track("Internal site visit", {
                 props: {
