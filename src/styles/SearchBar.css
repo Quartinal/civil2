@@ -1,38 +1,84 @@
+.sb-host {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: align-items 0s 0s;
+}
+
+.sb-host--expanded {
+    align-items: flex-start;
+}
+
 .sb-root {
-    width: 100%;
-    max-width: 700px;
-    margin: 0 auto;
+    pointer-events: all;
     position: relative;
     font-family: "Rubik", sans-serif;
+
+    width: min(700px, 90vw);
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    overflow: visible;
+
+    transition:
+        width 0.46s cubic-bezier(0.4, 0, 0.2, 1),
+        border-radius 0.46s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 0.46s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sb-root--expanded {
+    width: calc(100vw - 48px);
+    height: calc(100vh - 48px);
+    margin-top: 24px;
+    border-radius: 16px;
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.48);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .sb-input-wrapper {
     display: flex;
-    border-radius: 12px 12px 0 0;
+    flex-shrink: 0;
     background: var(--ctp-macchiato-surface0);
     border: 1px solid var(--ctp-macchiato-surface1);
-    border-bottom: 1px solid var(--ctp-macchiato-surface1);
-    transition: border-color 0.15s ease;
-}
 
-.sb-input-wrapper > *:first-child {
-    border-radius: 12px 0 0 0;
-}
-
-.sb-input-wrapper > *:last-child {
-    border-radius: 0 12px 0 0;
-}
-
-.sb-root:not(:has(.sb-dropdown)) .sb-input-wrapper {
     border-radius: 12px;
+
+    transition:
+        border-color 0.15s ease,
+        background 0.28s ease,
+        backdrop-filter 0.28s ease,
+        border-radius 0.46s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.sb-root:not(:has(.sb-dropdown)) .sb-input-wrapper > *:first-child {
-    border-radius: 12px 0 0 12px;
+.sb-root:has(.sb-dropdown) .sb-input-wrapper {
+    border-radius: 12px 12px 0 0;
+    border-bottom-color: transparent;
 }
 
-.sb-root:not(:has(.sb-dropdown)) .sb-input-wrapper > *:last-child {
-    border-radius: 0 12px 12px 0;
+.sb-root--expanded .sb-input-wrapper {
+    border-radius: 0;
+    border-bottom-color: var(--ctp-macchiato-surface1);
+}
+
+.sb-input-wrapper--blur {
+    background: color-mix(
+        in srgb,
+        var(--ctp-macchiato-surface0) 65%,
+        transparent
+    );
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    border-color: color-mix(
+        in srgb,
+        var(--ctp-macchiato-surface1) 55%,
+        transparent
+    );
 }
 
 .sb-input {
@@ -49,7 +95,6 @@
 
 .sb-input::placeholder {
     color: var(--ctp-macchiato-overlay0);
-    font-family: "Rubik", sans-serif;
 }
 
 .sb-button {
@@ -74,19 +119,35 @@
 }
 
 .sb-dropdown {
-    position: unset;
-    top: 100%;
     width: 100%;
     background: var(--ctp-macchiato-surface0);
     border: 1px solid var(--ctp-macchiato-surface1);
     border-top: none;
     border-radius: 0 0 12px 12px;
     overflow: hidden;
-    z-index: 50;
+    z-index: 10;
     list-style: none;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    transition:
+        background 0.28s ease,
+        backdrop-filter 0.28s ease;
+}
+
+.sb-dropdown--blur {
+    background: color-mix(
+        in srgb,
+        var(--ctp-macchiato-surface0) 65%,
+        transparent
+    );
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    border-color: color-mix(
+        in srgb,
+        var(--ctp-macchiato-surface1) 55%,
+        transparent
+    );
 }
 
 .sb-row {
@@ -111,9 +172,15 @@
 }
 
 .sb-frame {
+    flex: 1;
     width: 100%;
-    height: 500px;
     border: none;
-    margin-top: 16px;
-    border-radius: 12px;
+    margin: 0;
+    display: block;
+    opacity: 0;
+    transition: opacity 0.28s ease 0.28s;
+}
+
+.sb-frame--visible {
+    opacity: 1;
 }

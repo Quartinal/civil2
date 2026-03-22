@@ -1,4 +1,11 @@
-import { createSignal, onMount, onCleanup, Show, For } from "solid-js";
+import {
+    createSignal,
+    onMount,
+    onCleanup,
+    Show,
+    For,
+    createEffect,
+} from "solid-js";
 import searchBar from "~/lib/SearchBar";
 import genBCKey from "~/lib/genBCKey";
 import "~/styles/SearchBar.css";
@@ -10,7 +17,6 @@ const isProbablyUrl = (value: string) => {
         new URL(value);
         return true;
     } catch {}
-
     return /^[\w-]+\.[a-z]{2,}/i.test(value);
 };
 
@@ -20,20 +26,35 @@ export default function SearchBar() {
     const [query, setQuery] = createSignal("");
     const [suggestions, setSuggestions] = createSignal<string[]>([]);
     const [hasSubmitted, setHasSubmitted] = createSignal(false);
+    const [iframeUrl, setIframeUrl] = createSignal("");
+    const [iframeVisible, setIframeVisible] = createSignal(false);
 
     let ws: WebSocket | null = null;
     let inputRef: HTMLInputElement | undefined;
     let iframeRef: HTMLIFrameElement | undefined;
+    let hostRef: HTMLDivElement | undefined;
+    let rootRef: HTMLDivElement | undefined;
 
     const bcKey = genBCKey("typed_search");
     const channel = new BroadcastChannel(bcKey);
+
+    const showIframe = () => hasSubmitted() && iframeUrl() !== "";
+
+    createEffect(() => {
+        if (!hostRef || !rootRef) return;
+
+        if (showIframe()) {
+            hostRef.style.alignItems = "flex-start";
+        } else {
+            hostRef.style.alignItems = "center";
+        }
+    });
 
     onMount(() => {
         ws = new WebSocket(WS_URL);
         ws.onmessage = event => {
             try {
                 const { suggestions } = JSON.parse(event.data);
-
                 if (suggestions && Array.isArray(suggestions))
                     setSuggestions(suggestions);
             } catch {}
@@ -46,9 +67,16 @@ export default function SearchBar() {
             }
         };
 
+        const handleClickOutside = (e: MouseEvent) => {
+            if (hostRef && !hostRef.contains(e.target as Node))
+                setSuggestions([]);
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+
         onCleanup(() => {
             ws?.close();
             channel.close();
+            document.removeEventListener("mousedown", handleClickOutside);
         });
     });
 
@@ -58,10 +86,18 @@ export default function SearchBar() {
     const handleInput = (value: string) => {
         setQuery(value);
         broadcast(value);
-        if (value && !isProbablyUrl(value)) {
-            if (ws?.readyState === WebSocket.OPEN) {
+
+        if (!value) {
+            setHasSubmitted(false);
+            setIframeUrl("");
+            setIframeVisible(false);
+            setSuggestions([]);
+            return;
+        }
+
+        if (!isProbablyUrl(value)) {
+            if (ws?.readyState === WebSocket.OPEN)
                 ws.send(JSON.stringify({ q: value }));
-            }
         } else {
             setSuggestions([]);
         }
@@ -79,6 +115,9 @@ export default function SearchBar() {
         setSuggestions([]);
         broadcast(value);
         setHasSubmitted(true);
+        setIframeUrl(value);
+
+        setTimeout(() => setIframeVisible(true), 60);
 
         setTimeout(() => {
             if (!iframeRef) return;
@@ -87,43 +126,59 @@ export default function SearchBar() {
     };
 
     return (
-        <div class="sb-root">
-            <div class="sb-input-wrapper">
-                <input
-                    ref={inputRef}
-                    class="sb-input"
-                    value={query()}
-                    onInput={event => handleInput(event.currentTarget.value)}
-                    onKeyDown={event => event.key === "Enter" && handleSubmit()}
-                    placeholder="Search or enter a URL"
-                    autofocus
-                    spellcheck={false}
-                    autocomplete="off"
-                    data-enable-grammarly="false"
-                />
-                <button class="sb-button" onClick={() => handleSubmit()}>
-                    Unblock
-                </button>
+        <div ref={hostRef} class="sb-host">
+            <div
+                ref={rootRef}
+                class="sb-root"
+                classList={{ "sb-root--expanded": showIframe() }}
+            >
+                <div
+                    class="sb-input-wrapper"
+                    classList={{ "sb-input-wrapper--blur": showIframe() }}
+                >
+                    <input
+                        ref={inputRef}
+                        class="sb-input"
+                        value={query()}
+                        onInput={e => handleInput(e.currentTarget.value)}
+                        onKeyDown={e => e.key === "Enter" && handleSubmit()}
+                        placeholder="Search or enter a URL"
+                        autofocus
+                        spellcheck={false}
+                        autocomplete="off"
+                        data-enable-grammarly="false"
+                    />
+                    <button class="sb-button" onClick={() => handleSubmit()}>
+                        Unblock
+                    </button>
+                </div>
+
+                <Show when={suggestions().length > 0}>
+                    <ul
+                        class="sb-dropdown"
+                        classList={{ "sb-dropdown--blur": showIframe() }}
+                    >
+                        <For each={suggestions()}>
+                            {item => (
+                                <li
+                                    class="sb-row"
+                                    onClick={() => handleSubmit(item)}
+                                >
+                                    {item}
+                                </li>
+                            )}
+                        </For>
+                    </ul>
+                </Show>
+
+                <Show when={showIframe()}>
+                    <iframe
+                        ref={iframeRef}
+                        class="sb-frame"
+                        classList={{ "sb-frame--visible": iframeVisible() }}
+                    />
+                </Show>
             </div>
-
-            <Show when={suggestions().length > 0}>
-                <ul class="sb-dropdown">
-                    <For each={suggestions()}>
-                        {item => (
-                            <li
-                                class="sb-row"
-                                onClick={() => handleSubmit(item)}
-                            >
-                                {item}
-                            </li>
-                        )}
-                    </For>
-                </ul>
-            </Show>
-
-            <Show when={hasSubmitted()}>
-                <iframe ref={iframeRef} class="sb-frame" />
-            </Show>
         </div>
     );
 }

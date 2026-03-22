@@ -6,6 +6,7 @@
 
 html,
 body {
+    background-color: var(--ctp-macchiato-text);
     overflow-x: hidden;
 }
 
