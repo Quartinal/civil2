@@ -6,7 +6,7 @@ let initPromise: Promise<void> | null = null;
 let _loggedEncode = false;
 let _loggedDecode = false;
 
-export function init(): Promise<void> {
+export function init() {
     if (initPromise) return initPromise;
     const t0 = performance.now();
     console.debug("[xorWasm] init start");
@@ -40,7 +40,7 @@ const _unreserved = (c: number) =>
     c === 46 ||
     c === 126;
 
-function _jsDecode(str: string): string {
+function _jsDecode(str: string) {
     const b: number[] = [];
     for (let i = 0; i < str.length; i++) {
         if (str[i] === "%" && i + 2 < str.length) {
@@ -56,7 +56,7 @@ function _jsDecode(str: string): string {
     }
 }
 
-function _jsEncode(str: string): string {
+function _jsEncode(str: string) {
     const HEX = "0123456789ABCDEF";
     let s1 = "";
     for (const b of new TextEncoder().encode(str))

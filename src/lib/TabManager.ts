@@ -8,7 +8,7 @@ export interface Tab {
     isLoading: boolean;
 }
 
-const BROWSER_URLS: Record<string, string> = {
+export const BROWSER_URLS: Record<string, string> = {
     "browser:newtab": `${window.location.origin}/newtab`,
     "browser:settings": `${window.location.origin}/settings`,
     "browser:history": `${window.location.origin}/history`,
@@ -16,7 +16,7 @@ const BROWSER_URLS: Record<string, string> = {
     "browser:blank": "about:blank",
 };
 
-export function resolveUrl(url: string): string {
+export function resolveUrl(url: string) {
     if (BROWSER_URLS[url]) return BROWSER_URLS[url];
 
     const browserMatch = url.match(/^browser:(.+)$/);
@@ -26,17 +26,28 @@ export function resolveUrl(url: string): string {
             BROWSER_URLS[key] ?? `${window.location.origin}/${browserMatch[1]}`
         );
     }
-
     return url;
 }
 
-export class TabManager extends EventEmitter<{
+export function isNewtabUrl(url: string) {
+    const newtab = BROWSER_URLS["browser:newtab"];
+    return (
+        url === newtab ||
+        url === `${window.location.origin}/newtab` ||
+        url === "browser:newtab" ||
+        url === "browser://newtab"
+    );
+}
+
+export type TabManagerEvents = {
     tabAdded: (tab: Tab) => void;
     tabRemoved: (id: string) => void;
     tabActivated: (id: string) => void;
     tabUpdated: (tab: Tab) => void;
     tabMoved: (id: string, toIndex: number) => void;
-}> {
+};
+
+export class TabManager extends EventEmitter<TabManagerEvents> {
     private _tabs: Tab[] = [];
     private _activeId: string | null = null;
 
@@ -53,36 +64,31 @@ export class TabManager extends EventEmitter<{
     }
 
     createTab(url: string = "browser:newtab") {
-        const resolvedUrl = resolveUrl(url);
-
+        const resolved = resolveUrl(url);
         const tab: Tab = {
-            id: crypto.randomUUID().split("-")[0],
-            url: resolvedUrl,
+            id: crypto.randomUUID(),
+            url: resolved,
             title: url.startsWith("browser:")
                 ? url
                       .replace("browser:", "")
-                      .replace(/^\w/, char => char.toUpperCase())
+                      .replace(/^\w/, c => c.toUpperCase())
                 : "New Tab",
             isLoading: true,
         };
-
         this._tabs = [...this._tabs, tab];
         this.emit("tabAdded", tab);
-
         return tab;
     }
 
     removeTab(id: string) {
-        const idx = this._tabs.findIndex(tab => tab.id === id);
-
+        const idx = this._tabs.findIndex(t => t.id === id);
         if (idx === -1) return;
-
-        this._tabs = this._tabs.filter(tab => tab.id !== id);
+        this._tabs = this._tabs.filter(t => t.id !== id);
         this.emit("tabRemoved", id);
 
         if (this._activeId === id) {
-            const nextTab = this._tabs[Math.min(idx, this._tabs.length - 1)];
-            if (nextTab) this.activateTab(nextTab.id);
+            const next = this._tabs[Math.min(idx, this._tabs.length - 1)];
+            if (next) this.activateTab(next.id);
             else this._activeId = null;
         }
     }
@@ -93,24 +99,19 @@ export class TabManager extends EventEmitter<{
     }
 
     updateTab(id: string, patch: Partial<Omit<Tab, "id">>) {
-        this._tabs = this._tabs.map(tab =>
-            tab.id === id ? { ...tab, ...patch } : tab,
+        this._tabs = this._tabs.map(t =>
+            t.id === id ? { ...t, ...patch } : t,
         );
-
-        const updated = this._tabs.find(tab => tab.id === id);
+        const updated = this._tabs.find(t => t.id === id);
         if (updated) this.emit("tabUpdated", updated);
     }
 
     moveTab(id: string, toIndex: number) {
-        const from = this._tabs.findIndex(tab => tab.id === id);
-
+        const from = this._tabs.findIndex(t => t.id === id);
         if (from === -1) return;
-
         const arr = [...this._tabs];
-
         const [tab] = arr.splice(from, 1);
         arr.splice(toIndex, 0, tab);
-
         this._tabs = arr;
         this.emit("tabMoved", id, toIndex);
     }

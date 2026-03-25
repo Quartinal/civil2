@@ -48,6 +48,19 @@
     gap: 0;
     background: var(--br-crust);
     overflow: visible;
+    position: relative;
+}
+
+.browser--tabstrip::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--br-crust);
+    z-index: 3;
+    pointer-events: none;
 }
 
 .tab {
@@ -71,6 +84,21 @@
         width var(--t-mid);
 }
 
+.tab + .tab::after {
+    content: "";
+    position: absolute;
+    left: -1px;
+    top: 25%;
+    height: 50%;
+    width: 1px;
+    background: var(--br-surface0);
+    pointer-events: none;
+}
+.tab--active + .tab::after,
+.tab + .tab--active::after {
+    display: none;
+}
+
 .tab:hover {
     background: var(--br-mantle);
     color: var(--br-subtext1);
@@ -88,21 +116,6 @@
     background: var(--br-mantle);
     z-index: 10;
     pointer-events: none;
-}
-
-.tab + .tab::after {
-    content: "";
-    position: absolute;
-    left: -1px;
-    top: 25%;
-    height: 50%;
-    width: 1px;
-    background: var(--br-surface0);
-    pointer-events: none;
-}
-.tab--active + .tab::after,
-.tab + .tab--active::after {
-    display: none;
 }
 
 .tab--active {
@@ -126,37 +139,6 @@
     background: var(--br-base);
     z-index: 10;
     pointer-events: none;
-}
-
-.tab--corner-l,
-.tab--corner-r {
-    display: none;
-    position: absolute;
-    bottom: 0;
-    width: var(--tab-r);
-    height: var(--tab-r);
-    pointer-events: none;
-    z-index: 5;
-}
-.tab--active .tab--corner-l {
-    display: block;
-    left: calc(-1 * var(--tab-r));
-    background: radial-gradient(
-        circle at 100% 0%,
-        transparent 0%,
-        transparent calc(var(--tab-r) - 0.5px),
-        var(--br-crust) calc(var(--tab-r) + 0.5px)
-    );
-}
-.tab--active .tab--corner-r {
-    display: block;
-    right: calc(-1 * var(--tab-r));
-    background: radial-gradient(
-        circle at 0% 0%,
-        transparent 0%,
-        transparent calc(var(--tab-r) - 0.5px),
-        var(--br-crust) calc(var(--tab-r) + 0.5px)
-    );
 }
 
 .tab--dragging {
@@ -364,6 +346,7 @@
 .urlbar--input::placeholder {
     color: var(--br-overlay0);
 }
+
 .urlbar--go-btn {
     display: flex;
     align-items: center;

@@ -1,11 +1,17 @@
-import { createSignal, Show, For } from "solid-js";
+import { createSignal, Show, For, createEffect } from "solid-js";
 import searchBar from "~/lib/SearchBar";
 import SearchBarInput from "~/components/SearchBarInput";
 import "~/styles/SearchBar.css";
 
 export default function SearchBarContainer() {
     const bar = searchBar();
+
     const [suggestions, setSuggestions] = createSignal<string[]>([]);
+    const [hasSuggestions, setHasSuggestions] = createSignal(false);
+
+    createEffect(() => {
+        setHasSuggestions(suggestions().length > 0);
+    });
 
     const getIframe = () => {
         const frame = window.frameElement;
@@ -30,7 +36,10 @@ export default function SearchBarContainer() {
 
     return (
         <div class="sb-host">
-            <div class="sb-root">
+            <div
+                class="sb-root"
+                classList={{ "sb-root--has-suggestions": hasSuggestions() }}
+            >
                 <SearchBarInput
                     onSubmit={handleSubmit}
                     onSuggestions={setSuggestions}

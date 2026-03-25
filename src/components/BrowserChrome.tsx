@@ -8,7 +8,7 @@ import {
     batch,
 } from "solid-js";
 import { createStore, produce } from "solid-js/store";
-import { tabManager, Tab, resolveUrl } from "~/lib/TabManager";
+import { tabManager, Tab, resolveUrl, isNewtabUrl } from "~/lib/TabManager";
 import searchBar from "~/lib/SearchBar";
 
 import { BiRegularLeftArrowAlt, BiRegularRightArrowAlt } from "solid-icons/bi";
@@ -52,10 +52,6 @@ function TabPill(props: {
             style={{ width: `${props.width}px` }}
             onPointerDown={props.onPointerDown}
         >
-            {}
-            <div class="tab--corner-l" />
-            <div class="tab--corner-r" />
-
             <Show when={props.tab.favicon}>
                 <img class="tab--favicon" src={props.tab.favicon} alt="" />
             </Show>
@@ -88,6 +84,7 @@ function UrlBar(props: {
     value: string;
     canBack: boolean;
     canForward: boolean;
+    isNewtab: boolean;
     onNavigate: (url: string) => void;
     onBack: () => void;
     onForward: () => void;
@@ -95,7 +92,8 @@ function UrlBar(props: {
 }) {
     const [editing, setEditing] = createSignal(false);
     const [draft, setDraft] = createSignal("");
-    const display = () => (editing() ? draft() : displayUrl(props.value));
+    const display = () =>
+        editing() ? draft() : props.isNewtab ? "" : displayUrl(props.value);
     const commit = () => {
         const v = draft().trim();
         if (!v) return setEditing(false);
@@ -133,16 +131,22 @@ function UrlBar(props: {
                 class="urlbar--omnibox"
                 classList={{ "urlbar--omnibox--focus": editing() }}
             >
-                <span class="urlbar--lock">
-                    <TbOutlineLock size={12} />
-                </span>
+                <Show when={!props.isNewtab}>
+                    <span class="urlbar--lock">
+                        <TbOutlineLock size={12} />
+                    </span>
+                </Show>
                 <input
                     class="urlbar--input"
                     type="text"
                     value={display()}
+                    placeholder={
+                        props.isNewtab ? "Search or enter address" : ""
+                    }
                     onFocus={e => {
                         setEditing(true);
-                        setDraft(props.value);
+
+                        setDraft(props.isNewtab ? "" : props.value);
                         (e.target as HTMLInputElement).select();
                     }}
                     onInput={e =>
@@ -255,6 +259,8 @@ export default function BrowserChrome() {
         navigateIframe(id, resolveUrl(url));
     const activeUrl = () =>
         tabStore.tabs.find(t => t.id === activeId())?.url ?? "";
+
+    const activeTabIsNewtab = createMemo(() => isNewtabUrl(activeUrl()));
 
     const registerIframe = (id: string, el: HTMLIFrameElement) => {
         iframeMap.set(id, el);
@@ -414,6 +420,7 @@ export default function BrowserChrome() {
                     value={activeUrl()}
                     canBack={canBack()}
                     canForward={canForward()}
+                    isNewtab={activeTabIsNewtab()}
                     onNavigate={url => {
                         const id = activeId();
                         if (id) navigate(id, url);
