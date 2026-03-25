@@ -17,13 +17,11 @@
     pointer-events: all;
     position: relative;
     font-family: "Rubik", sans-serif;
-
     width: min(700px, 90vw);
     height: auto;
     border-radius: 12px;
     box-shadow: 0 0 0 rgba(0, 0, 0, 0);
     overflow: visible;
-
     transition:
         width 0.46s cubic-bezier(0.4, 0, 0.2, 1),
         border-radius 0.46s cubic-bezier(0.4, 0, 0.2, 1),
@@ -41,21 +39,6 @@
     flex-direction: column;
 }
 
-.sb-input-wrapper {
-    display: flex;
-    flex-shrink: 0;
-    background: var(--ctp-macchiato-surface0);
-    border: 1px solid var(--ctp-macchiato-surface1);
-
-    border-radius: 12px;
-
-    transition:
-        border-color 0.15s ease,
-        background 0.28s ease,
-        backdrop-filter 0.28s ease,
-        border-radius 0.46s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 .sb-root:has(.sb-dropdown) .sb-input-wrapper {
     border-radius: 12px 12px 0 0;
     border-bottom-color: transparent;
@@ -64,58 +47,6 @@
 .sb-root--expanded .sb-input-wrapper {
     border-radius: 0;
     border-bottom-color: var(--ctp-macchiato-surface1);
-}
-
-.sb-input-wrapper--blur {
-    background: color-mix(
-        in srgb,
-        var(--ctp-macchiato-surface0) 65%,
-        transparent
-    );
-    backdrop-filter: blur(20px) saturate(1.5);
-    -webkit-backdrop-filter: blur(20px) saturate(1.5);
-    border-color: color-mix(
-        in srgb,
-        var(--ctp-macchiato-surface1) 55%,
-        transparent
-    );
-}
-
-.sb-input {
-    flex: 1;
-    padding: 12px 16px;
-    border: none;
-    outline: none;
-    background: transparent;
-    color: var(--ctp-macchiato-text);
-    font-size: 14px;
-    font-family: "Rubik", sans-serif;
-    font-weight: 400;
-}
-
-.sb-input::placeholder {
-    color: var(--ctp-macchiato-overlay0);
-}
-
-.sb-button {
-    padding: 0 20px;
-    border: none;
-    border-left: 1px solid var(--ctp-macchiato-surface1);
-    background: transparent;
-    color: var(--ctp-macchiato-mauve);
-    font-family: "Rubik", sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    letter-spacing: 0.01em;
-    transition:
-        background 0.15s ease,
-        color 0.15s ease;
-}
-
-.sb-button:hover {
-    background: var(--ctp-macchiato-surface1);
-    color: var(--ctp-macchiato-lavender);
 }
 
 .sb-dropdown {

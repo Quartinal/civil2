@@ -3,7 +3,7 @@ import { createSignal, onMount, onCleanup, Show } from "solid-js";
 import LoadingAnimation from "~/components/LoadingAnimation";
 import { clientOnly } from "@solidjs/start";
 
-const SearchBar = clientOnly(() => import("~/components/SearchBar"));
+const Browser = clientOnly(() => import("~/components/BrowserChrome.tsx"));
 
 export const Route = createFileRoute("/")({
     component: RouteComponent,
@@ -60,7 +60,7 @@ function RouteComponent() {
         <>
             <TimedLoadingAnimation />
             <main>
-                <SearchBar />
+                <Browser />
             </main>
         </>
     );

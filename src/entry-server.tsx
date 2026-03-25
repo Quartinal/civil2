@@ -1,8 +1,9 @@
 // @refresh reload
-import { createHandler, FetchEvent, StartServer } from "@solidjs/start/server";
+import { createHandler, StartServer } from "@solidjs/start/server";
 import { createMemoryHistory } from "@tanstack/solid-router";
 import { router } from "./router";
 import { For } from "solid-js";
+import type { FetchEvent } from "@solidjs/start/server";
 
 const routerLoad = async (event: FetchEvent) => {
     const url = new URL(event.request.url);

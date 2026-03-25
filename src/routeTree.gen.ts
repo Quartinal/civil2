@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as NewtabRouteImport } from './routes/newtab'
 import { Route as BenchmarksRouteImport } from './routes/benchmarks'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 
+const NewtabRoute = NewtabRouteImport.update({
+  id: '/newtab',
+  path: '/newtab',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BenchmarksRoute = BenchmarksRouteImport.update({
   id: '/benchmarks',
   path: '/benchmarks',
@@ -33,34 +39,45 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/benchmarks': typeof BenchmarksRoute
+  '/newtab': typeof NewtabRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/benchmarks': typeof BenchmarksRoute
+  '/newtab': typeof NewtabRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/benchmarks': typeof BenchmarksRoute
+  '/newtab': typeof NewtabRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/benchmarks'
+  fullPaths: '/' | '/about' | '/benchmarks' | '/newtab'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/benchmarks'
-  id: '__root__' | '/' | '/about' | '/benchmarks'
+  to: '/' | '/about' | '/benchmarks' | '/newtab'
+  id: '__root__' | '/' | '/about' | '/benchmarks' | '/newtab'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   BenchmarksRoute: typeof BenchmarksRoute
+  NewtabRoute: typeof NewtabRoute
 }
 
 declare module '@tanstack/solid-router' {
   interface FileRoutesByPath {
+    '/newtab': {
+      id: '/newtab'
+      path: '/newtab'
+      fullPath: '/newtab'
+      preLoaderRoute: typeof NewtabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/benchmarks': {
       id: '/benchmarks'
       path: '/benchmarks'
@@ -89,6 +106,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   BenchmarksRoute: BenchmarksRoute,
+  NewtabRoute: NewtabRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

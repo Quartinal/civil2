@@ -19,7 +19,7 @@ window.scramjet = new ScramjetController({
         sourcemaps: true,
     },
     codec: {
-        encode: function (s: string) {
+        encode: (s: string) => {
             const state = (globalThis as any).__civil_xorWasm__;
             if (state) {
                 const { mod } = state;
@@ -66,7 +66,7 @@ window.scramjet = new ScramjetController({
                     : "%" + H[c >> 4] + H[c & 15];
             return out;
         },
-        decode: function (s: string) {
+        decode: (s: string) => {
             const state = (globalThis as any).__civil_xorWasm__;
             if (state) {
                 const { mod } = state;

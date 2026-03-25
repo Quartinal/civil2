@@ -51,7 +51,7 @@ import type { Socket } from "node:net";
 import packageJson from "./package.json" with { type: "json" };
 
 class RammerheadRouting {
-    static #scopes: Array<string> & { length: 15 } = [
+    static #scopes: string[] & { length: 15 } = [
         "/rammerhead.js",
         "/hammerhead.js",
         "/transport-worker.js",
@@ -72,8 +72,8 @@ class RammerheadRouting {
     static shouldRoute(req: Request) {
         const url = new URL(req.url!, "http://0.0.0.0");
         return (
-            this.#scopes.includes(url.pathname) ||
-            url.pathname.match(/^\/[a-z0-9]{32}/)
+            RammerheadRouting.#scopes.includes(url.pathname) ||
+            /^\/[a-z0-9]{32}/.test(url.pathname)
         );
     }
 
