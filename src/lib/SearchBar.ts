@@ -6,7 +6,6 @@ import type { ScramjetController } from "@mercuryworkshop/scramjet";
 import type * as _BareMux from "@mercuryworkshop/bare-mux";
 
 interface ProxyEntry {
-    // this is only for interception proxies
     name: "uv" | "scramjet";
     value: UVConfig | ScramjetController;
 }
@@ -32,6 +31,15 @@ declare global {
     var BareMux: typeof _BareMux;
 }
 
+function isNavigableUrl(term: string): boolean {
+    try {
+        const u = new URL(term);
+        return /^https?:|^ftp:/.test(u.protocol);
+    } catch {}
+
+    return /^[\w-]+\.[a-z]{2,}/i.test(term);
+}
+
 class SearchBar
     extends EventEmitter<{
         submit: (frame: HTMLIFrameElement, term: string) => void;
@@ -44,7 +52,6 @@ class SearchBar
     proxyObjMap: ISearchBar["proxyObjMap"];
     searchEngineMap: ISearchBar["searchEngineMap"];
 
-    // not including proxyObjMap
     static #keys = ["lastUrlSearched", "url", "debugInfo"] as const;
 
     constructor() {
@@ -75,7 +82,6 @@ class SearchBar
                 .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
                 .toLowerCase();
             const value = localStorage.getItem(storageKey)!;
-
             this[key] = isJson(value) ? JSON.parse(value) : value;
         }
 
@@ -95,26 +101,11 @@ class SearchBar
         ];
 
         this.searchEngineMap = [
-            {
-                name: "google",
-                value: "https://www.google.com/search?q=%s",
-            },
-            {
-                name: "ddg",
-                value: "https://duckduckgo.com/?q=%s",
-            },
-            {
-                name: "bing",
-                value: "https://www.bing.com/search?q=%s",
-            },
-            {
-                name: "brave",
-                value: "https://search.brave.com/search?q=%s",
-            },
-            {
-                name: "searx",
-                value: "https://searx.org/search?q=%s",
-            },
+            { name: "google", value: "https://www.google.com/search?q=%s" },
+            { name: "ddg", value: "https://duckduckgo.com/?q=%s" },
+            { name: "bing", value: "https://www.bing.com/search?q=%s" },
+            { name: "brave", value: "https://search.brave.com/search?q=%s" },
+            { name: "searx", value: "https://searx.org/search?q=%s" },
         ];
 
         this.registerHandlers();
@@ -125,9 +116,8 @@ class SearchBar
             try {
                 new URL(query);
                 return true;
-            } catch {
-                return false;
-            }
+            } catch {}
+            return false;
         };
 
         this.on("submit", (frame, term) => {
@@ -136,17 +126,24 @@ class SearchBar
                 "scramjet";
             const proxy = this.proxyObjMap.find(p => p.name === storedProxy)!;
 
-            const normalizedTerm = (
-                proxy.name === "scramjet"
-                    ? this.searchEngineMap
-                          .find(
-                              eng =>
-                                  eng.name ===
-                                  (localStorage.getItem("search") || "google"),
-                          )
-                          ?.value.replace("%s", term)
-                    : term
-            )!;
+            let normalizedTerm: string;
+
+            if (proxy.name === "uv") {
+                normalizedTerm = term;
+            } else {
+                if (isNavigableUrl(term)) {
+                    normalizedTerm = isUrl(term) ? term : `https://${term}`;
+                } else {
+                    const engine = this.searchEngineMap.find(
+                        eng =>
+                            eng.name ===
+                            (localStorage.getItem("search") || "google"),
+                    );
+                    normalizedTerm =
+                        engine?.value.replace("%s", encodeURIComponent(term)) ??
+                        `https://www.google.com/search?q=${encodeURIComponent(term)}`;
+                }
+            }
 
             frame.contentWindow?.location.replace(
                 (proxy.name === "uv" ? "/~/uv/" : "") +
@@ -159,8 +156,6 @@ class SearchBar
                 },
             });
         });
-
-        // TODO: add more event handlers
     }
 }
 

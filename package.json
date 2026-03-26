@@ -64,6 +64,8 @@
         "rollup-plugin-polyfill-node": "^0.13.0",
         "rollup-plugin-typescript2": "^0.36.0",
         "typescript": "^5.9.3",
+        "vite-plugin-bundle-obfuscator": "^1.11.0",
+        "vite-plugin-sitemap": "^0.8.2",
         "vite-tsconfig-paths": "^6.1.1"
     },
     "trustedDependencies": [

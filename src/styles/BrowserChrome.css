@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Rubik:wght@400;500&display=swap");
+
 .browser {
     --br-base: var(--ctp-macchiato-base);
     --br-mantle: var(--ctp-macchiato-mantle);
@@ -311,7 +313,6 @@
     border: 1.5px solid transparent;
     border-radius: 14px;
     padding: 0 8px 0 10px;
-    margin: 0 6px;
     transition:
         border-color var(--t-fast),
         background var(--t-fast),
@@ -423,4 +424,86 @@
 .browser--empty button:hover {
     opacity: 0.88;
     box-shadow: 0 2px 12px color-mix(in srgb, var(--br-accent) 35%, transparent);
+}
+
+.urlbar--omnibox--newtab {
+    background: var(--br-surface1);
+}
+
+.urlbar--input[placeholder]:not(:focus)::placeholder {
+    opacity: 1;
+}
+
+.urlbar--omnibox-wrap {
+    flex: 1;
+    position: relative;
+    margin: 0 6px;
+}
+
+.urlbar--omnibox-wrap:has(.urlbar--suggestions) .urlbar--omnibox {
+    border-radius: 14px 14px 0 0;
+
+    border-bottom-color: transparent;
+
+    box-shadow:
+        3px 0 0 0 color-mix(in srgb, var(--br-accent) 18%, transparent),
+        -3px 0 0 0 color-mix(in srgb, var(--br-accent) 18%, transparent),
+        0 -3px 0 0 color-mix(in srgb, var(--br-accent) 18%, transparent);
+}
+
+.urlbar--suggestions {
+    position: absolute;
+
+    top: 100%;
+
+    left: -1.5px;
+    right: -1.5px;
+    background: var(--br-mantle);
+
+    border: 1.5px solid var(--br-accent);
+    border-top: none;
+    border-radius: 0 0 14px 14px;
+    overflow: hidden;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    z-index: 100;
+
+    box-shadow:
+        3px 0 0 0 color-mix(in srgb, var(--br-accent) 18%, transparent),
+        -3px 0 0 0 color-mix(in srgb, var(--br-accent) 18%, transparent),
+        0 3px 0 0 color-mix(in srgb, var(--br-accent) 18%, transparent);
+    animation: urlbar-sugg-in 0.12s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes urlbar-sugg-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.urlbar--suggestion-row {
+    padding: 7px 12px;
+    font-size: 12.5px;
+    font-family: inherit;
+    color: var(--br-subtext0);
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition:
+        background var(--t-fast),
+        color var(--t-fast);
+}
+
+.urlbar--suggestion-row + .urlbar--suggestion-row {
+    border-top: 1px solid var(--br-surface0);
+}
+
+.urlbar--suggestion-row:hover {
+    background: var(--br-surface0);
+    color: var(--br-text);
 }

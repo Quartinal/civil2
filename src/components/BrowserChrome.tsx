@@ -80,6 +80,16 @@ function TabPill(props: {
     );
 }
 
+const WS_URL = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/suggestions`;
+
+const isProbablyUrl = (v: string): boolean => {
+    try {
+        new URL(v);
+        return true;
+    } catch {}
+    return /^[\w-]+\.[a-z]{2,}/i.test(v);
+};
+
 function UrlBar(props: {
     value: string;
     canBack: boolean;
@@ -92,14 +102,59 @@ function UrlBar(props: {
 }) {
     const [editing, setEditing] = createSignal(false);
     const [draft, setDraft] = createSignal("");
+    const [suggestions, setSuggestions] = createSignal<string[]>([]);
+    let ws: WebSocket | null = null;
+    let inputRef: HTMLInputElement | undefined;
+    let suppressBlur = false;
+
+    const openWs = () => {
+        if (ws && ws.readyState === WebSocket.OPEN) return;
+        ws = new WebSocket(WS_URL);
+        ws.onmessage = ev => {
+            try {
+                const { suggestions: s } = JSON.parse(ev.data);
+                if (Array.isArray(s)) setSuggestions(s);
+            } catch {}
+        };
+    };
+
+    const closeWs = () => {
+        ws?.close();
+        ws = null;
+    };
+
     const display = () =>
         editing() ? draft() : props.isNewtab ? "" : displayUrl(props.value);
-    const commit = () => {
-        const v = draft().trim();
-        if (!v) return setEditing(false);
-        props.onNavigate(resolveUrl(v));
+
+    const commit = (value = draft()) => {
+        const v = value.trim();
+        if (!v) {
+            setEditing(false);
+            setSuggestions([]);
+            return;
+        }
+        setSuggestions([]);
         setEditing(false);
+        closeWs();
+        const resolved = resolveUrl(v);
+        props.onNavigate(resolved !== v ? resolved : v);
     };
+
+    const handleInput = (v: string) => {
+        setDraft(v);
+        if (!v) {
+            setSuggestions([]);
+            return;
+        }
+        if (!isProbablyUrl(v)) {
+            openWs();
+            if (ws?.readyState === WebSocket.OPEN)
+                ws.send(JSON.stringify({ q: v }));
+        } else {
+            setSuggestions([]);
+        }
+    };
+
     return (
         <div class="urlbar">
             <button
@@ -127,47 +182,85 @@ function UrlBar(props: {
             >
                 <TbOutlineRefresh size={17} />
             </button>
-            <div
-                class="urlbar--omnibox"
-                classList={{ "urlbar--omnibox--focus": editing() }}
-            >
-                <Show when={!props.isNewtab}>
-                    <span class="urlbar--lock">
-                        <TbOutlineLock size={12} />
-                    </span>
-                </Show>
-                <input
-                    class="urlbar--input"
-                    type="text"
-                    value={display()}
-                    placeholder={
-                        props.isNewtab ? "Search or enter address" : ""
-                    }
-                    onFocus={e => {
-                        setEditing(true);
 
-                        setDraft(props.isNewtab ? "" : props.value);
-                        (e.target as HTMLInputElement).select();
+            <div class="urlbar--omnibox-wrap">
+                <div
+                    class="urlbar--omnibox"
+                    classList={{
+                        "urlbar--omnibox--focus":
+                            editing() || suggestions().length > 0,
                     }}
-                    onInput={e =>
-                        setDraft((e.target as HTMLInputElement).value)
-                    }
-                    onBlur={() => setEditing(false)}
-                    onKeyDown={e => {
-                        if (e.key === "Enter") commit();
-                        if (e.key === "Escape") setEditing(false);
-                    }}
-                    spellcheck={false}
-                    autocomplete="off"
-                />
-                <button
-                    class="urlbar--go-btn"
-                    title="Go"
-                    onClick={commit}
-                    onMouseDown={e => e.preventDefault()}
                 >
-                    <TbOutlineArrowRight size={14} />
-                </button>
+                    <Show when={!props.isNewtab && !editing()}>
+                        <span class="urlbar--lock">
+                            <TbOutlineLock size={12} />
+                        </span>
+                    </Show>
+                    <input
+                        ref={inputRef}
+                        class="urlbar--input"
+                        type="text"
+                        value={display()}
+                        placeholder={
+                            props.isNewtab || editing()
+                                ? "Search or enter address"
+                                : ""
+                        }
+                        onFocus={e => {
+                            setEditing(true);
+                            openWs();
+                            setDraft(props.isNewtab ? "" : props.value);
+                            e.target.select();
+                        }}
+                        onInput={e => handleInput(e.target.value)}
+                        onBlur={() => {
+                            if (suppressBlur) return;
+                            setEditing(false);
+                            setSuggestions([]);
+                            closeWs();
+                        }}
+                        onKeyDown={e => {
+                            if (e.key === "Enter") commit();
+                            if (e.key === "Escape") {
+                                setSuggestions([]);
+                                setEditing(false);
+                                inputRef?.blur();
+                            }
+                        }}
+                        spellcheck={false}
+                        autocomplete="off"
+                    />
+                    <button
+                        class="urlbar--go-btn"
+                        title="Go"
+                        onClick={() => commit()}
+                        onMouseDown={e => e.preventDefault()}
+                    >
+                        <TbOutlineArrowRight size={14} />
+                    </button>
+                </div>
+
+                <Show when={suggestions().length > 0}>
+                    <ul class="urlbar--suggestions">
+                        <For each={suggestions()}>
+                            {s => (
+                                <li
+                                    class="urlbar--suggestion-row"
+                                    onMouseDown={() => {
+                                        suppressBlur = true;
+                                    }}
+                                    onClick={() => {
+                                        suppressBlur = false;
+                                        commit(s);
+                                        inputRef?.blur();
+                                    }}
+                                >
+                                    {s}
+                                </li>
+                            )}
+                        </For>
+                    </ul>
+                </Show>
             </div>
         </div>
     );
@@ -248,18 +341,26 @@ export default function BrowserChrome() {
     );
     tabManager.on("tabMoved", () => setTabStore("tabs", [...tabManager.tabs]));
 
+    const normalizeNav = (term: string): string => {
+        try {
+            new URL(term);
+            return term;
+        } catch {}
+        if (/^[\w-]+\.[a-z]{2,}/i.test(term)) return `https://${term}`;
+        return term;
+    };
+
     const navigateIframe = (id: string, url: string) => {
         const iframe = iframeMap.get(id);
         if (!iframe) return;
         pushHistory(id, url);
         tabManager.updateTab(id, { url, isLoading: true, title: "Loading…" });
-        bar.emit("submit", iframe, url);
+        bar.emit("submit", iframe, normalizeNav(url));
     };
     const navigate = (id: string, url: string) =>
         navigateIframe(id, resolveUrl(url));
     const activeUrl = () =>
         tabStore.tabs.find(t => t.id === activeId())?.url ?? "";
-
     const activeTabIsNewtab = createMemo(() => isNewtabUrl(activeUrl()));
 
     const registerIframe = (id: string, el: HTMLIFrameElement) => {
@@ -460,6 +561,7 @@ export default function BrowserChrome() {
                 <For each={tabStore.tabs}>
                     {tab => (
                         <iframe
+                            title="Proxied browser-in-browser webpage"
                             class="browser--frame"
                             classList={{
                                 "browser--frame--active": tab.id === activeId(),
