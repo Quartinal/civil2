@@ -1,6 +1,4 @@
-#!/usr/bin/bash
-
-bun run build:encoders
+#!/usr/bin/env bash
 
 cd misc/config
 
