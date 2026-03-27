@@ -107,7 +107,7 @@ window.scramjet = new ScramjetController({
     },
 });
 
-init().then(() => {
+init()!.then(() => {
     setSearchEngine(localStorage.getItem("search")! || "google");
     window.scramjet.init();
 });

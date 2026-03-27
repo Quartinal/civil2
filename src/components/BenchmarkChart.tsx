@@ -37,13 +37,17 @@ type ImplMetadata = {
 };
 
 function meta(impl: string): ImplMetadata {
-    for (const [key, value] of Object.entries(IMPL_METADATA))
-        if (impl.toLowerCase().includes(key.toLowerCase().slice(0, 8)))
-            return value;
-    if (impl.includes("new"))
+    const lower = impl.toLowerCase();
+    if (lower.includes("new"))
         return IMPL_METADATA["UltraViolet new encoding method"];
-    if (impl.includes("old"))
+    if (lower.includes("old"))
         return IMPL_METADATA["UltraViolet old encoding method"];
+    if (
+        lower.includes("civil") ||
+        lower.includes("wasm") ||
+        lower.includes("c++")
+    )
+        return IMPL_METADATA["Civil C++/WebAssembly encoding method"];
     return IMPL_METADATA["Civil C++/WebAssembly encoding method"];
 }
 

@@ -26,6 +26,6 @@ self.__uv$config = {
     config: "/uv_config.js",
 } satisfies Partial<UVConfig>;
 
-init().then(() => {
+init()!.then(() => {
     setSearchEngine(localStorage.getItem("search")! || "google");
 });

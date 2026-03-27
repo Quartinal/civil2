@@ -1,5 +1,7 @@
 FROM oven/bun:alpine
 
+RUN apk add --no-cache bash
+
 WORKDIR /app
 
 COPY package.json bun.lock ./

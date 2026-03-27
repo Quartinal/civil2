@@ -174,22 +174,35 @@ function initDb(path) {
     return db;
 }
 
-function saveResult(db, impl, iterations, { totalMs, opsPerSec, avgNsPerOp }) {
+function saveResult(
+    db,
+    runTs,
+    impl,
+    iterations,
+    { totalMs, opsPerSec, avgNsPerOp },
+) {
     return db
         .prepare(`
-        INSERT INTO runs (iterations, impl, total_ms, ops_per_sec, avg_ns_per_op)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO runs (run_ts, iterations, impl, total_ms, ops_per_sec, avg_ns_per_op)
+        VALUES (?, ?, ?, ?, ?, ?)
     `)
-        .run(iterations, impl, totalMs, opsPerSec, avgNsPerOp);
+        .run(runTs, iterations, impl, totalMs, opsPerSec, avgNsPerOp);
 }
 
-function saveComparison(db, iterations, baselineImpl, wasmOps, baselineOps) {
+function saveComparison(
+    db,
+    runTs,
+    iterations,
+    baselineImpl,
+    wasmOps,
+    baselineOps,
+) {
     const speedup = wasmOps != null ? wasmOps / baselineOps : null;
     db.prepare(`
         INSERT INTO comparisons
-            (iterations, baseline_impl, wasm_ops_per_sec, baseline_ops_per_sec, speedup_factor)
-        VALUES (?, ?, ?, ?, ?)
-    `).run(iterations, baselineImpl, wasmOps, baselineOps, speedup);
+            (run_ts, iterations, baseline_impl, wasm_ops_per_sec, baseline_ops_per_sec, speedup_factor)
+        VALUES (?, ?, ?, ?, ?, ?)
+    `).run(runTs, iterations, baselineImpl, wasmOps, baselineOps, speedup);
     return speedup;
 }
 
@@ -226,6 +239,7 @@ function exportJson(db) {
     );
 
     const db = initDb(DB_PATH);
+    const runTs = new Date().toISOString().replace("T", " ").slice(0, 19);
 
     const impls = [
         { key: "ultraviolet new encoding method", impl: uvXor },
@@ -240,7 +254,7 @@ function exportJson(db) {
     for (const { key, impl } of impls) {
         const r = bench(impl, key);
         results[key] = r;
-        saveResult(db, key, ITERATIONS, r);
+        saveResult(db, runTs, key, ITERATIONS, r);
     }
 
     const wasmOps =
@@ -249,6 +263,7 @@ function exportJson(db) {
     for (const { key } of impls.filter(i => !i.key.includes("wasm"))) {
         const speedup = saveComparison(
             db,
+            runTs,
             ITERATIONS,
             key,
             wasmOps,
