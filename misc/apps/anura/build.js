@@ -2,8 +2,9 @@ import { build } from "esbuild";
 import server from "esbuild-server";
 import { solidPlugin as solid } from "esbuild-plugin-solid";
 import { rimraf } from "rimraf";
-import { writeFile } from "node:fs/promises";
+import { writeFile, cp } from "node:fs/promises";
 import { resolve } from "node:path";
+import { name } from "./package.json" with { type: "json" };
 
 await rimraf("dist");
 
@@ -16,6 +17,9 @@ const makeHtml = (scriptSrc, cssSrc) => `<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>New Tab</title>
   ${cssSrc ? `<link rel="stylesheet" href="${cssSrc}" />` : ""}
+  <link rel="icon" href="./icon.ico" />
+  <script src="/uv/uv.bundle.js"></script>
+  <script src="/uv/uv.config.js"></script>
 </head>
 <body>
   <div id="root"></div>
@@ -48,10 +52,25 @@ const config = {
 await build(config);
 
 await writeFile("dist/index.html", makeHtml("./index.js", "./index.css"));
-await writeFile("dist/newtab.html", makeHtml("./newtab.js", null));
+await writeFile("dist/newtab.html", makeHtml("./newtab.js", "./newtab.css"));
+
+await cp("../../../public/favicon.ico", "dist/icon.ico");
+
+const manifest = JSON.stringify({
+    name: "Civil Proxy",
+    type: "auto",
+    package: name.split("-").reverse().join("."),
+    index: "./index.html",
+    icon: "./icon.ico",
+    wininfo: {
+        title: "Civil Proxy",
+    },
+});
+
+await writeFile("dist/manifest.json", manifest, "utf-8");
 
 if (isDev)
-    server(undefined, {
+    await server(undefined, {
         static: "dist",
         port: process.env.PORT || 8877,
     }).start();

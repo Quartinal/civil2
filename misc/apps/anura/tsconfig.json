@@ -7,8 +7,9 @@
         "noEmit": true,
         "jsx": "preserve",
         "jsxImportSource": "solid-js",
-        "types": ["@mercuryworkshop/anuraos-types"],
+        "types": ["@mercuryworkshop/anuraos-types", "serviceworker"],
         "baseUrl": ".",
+        "resolveJsonModule": true,
         "paths": {
             "#lib/*": ["src/lib/*"],
             "#styles/*": ["src/styles/*"]

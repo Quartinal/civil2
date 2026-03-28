@@ -1,6 +1,15 @@
 import { render } from "solid-js/web";
+import "@catppuccin/palette/css/catppuccin.css";
 
 function NewTab() {
+    const style = document.createElement("style");
+    style.textContent = `
+        @import url("https://fonts.googleapis.com/css2?family=Rubik:wght@400;500&display=swap");
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body, #root { margin: 0; padding: 0; width: 100%; height: 100%; font-family: "Rubik", ui-sans-serif, sans-serif; }
+    `;
+    document.head.appendChild(style);
+
     return (
         <div
             style={{
@@ -8,11 +17,11 @@ function NewTab() {
                 "flex-direction": "column",
                 "align-items": "center",
                 "justify-content": "center",
-                height: "100vh",
-                background: "#24273a",
-                color: "#cad3f5",
+                width: "100%",
+                height: "100%",
+                background: "var(--ctp-macchiato-base)",
+                color: "var(--ctp-macchiato-text)",
                 "font-family": "'Rubik', ui-sans-serif, sans-serif",
-                margin: 0,
             }}
         >
             <h1
@@ -20,12 +29,17 @@ function NewTab() {
                     "font-size": "2rem",
                     "font-weight": 500,
                     "margin-bottom": "0.5rem",
-                    color: "#b7bdf8",
+                    color: "var(--ctp-macchiato-lavender)",
                 }}
             >
                 New Tab
             </h1>
-            <p style={{ color: "#a5adcb", "font-size": "0.9rem" }}>
+            <p
+                style={{
+                    color: "var(--ctp-macchiato-subtext0)",
+                    "font-size": "0.9rem",
+                }}
+            >
                 Start typing in the address bar to get started.
             </p>
         </div>

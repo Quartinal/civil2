@@ -8,9 +8,20 @@ import {
     batch,
 } from "solid-js";
 import { createStore, produce } from "solid-js/store";
-import { tabManager, Tab, resolveUrl, isNewtabUrl } from "#lib/TabManager";
+import { tabManager, type Tab, resolveUrl, isNewtabUrl } from "#lib/TabManager";
 import searchBar from "#lib/SearchBar";
+import { BiRegularLeftArrowAlt, BiRegularRightArrowAlt } from "solid-icons/bi";
+import {
+    TbOutlineRefresh,
+    TbOutlineLock,
+    TbOutlineWorld,
+    TbOutlineArrowRight,
+    TbOutlinePlus,
+    TbOutlineX,
+} from "solid-icons/tb";
+import { CgSpinner } from "solid-icons/cg";
 
+import "@catppuccin/palette/css/catppuccin.css";
 import "#styles/BrowserChrome.css";
 
 const topWin = top as any;
@@ -50,9 +61,9 @@ function TabPill(props: {
                 <span class="tab--icon">
                     <Show
                         when={props.tab.isLoading}
-                        fallback={<span class="icon-globe" />}
+                        fallback={<TbOutlineWorld size={13} />}
                     >
-                        <span class="icon-spinner spin" />
+                        <CgSpinner size={13} class="spin" />
                     </Show>
                 </span>
             </Show>
@@ -65,7 +76,7 @@ function TabPill(props: {
                     props.onClose(e);
                 }}
             >
-                <span class="icon-x" />
+                <TbOutlineX size={12} />
             </button>
         </div>
     );
@@ -116,7 +127,7 @@ function UrlBar(props: {
                 disabled={!props.canBack}
                 onClick={props.onBack}
             >
-                <span class="icon-arrow-left" />
+                <BiRegularLeftArrowAlt size={17} />
             </button>
             <button
                 class="urlbar--nav-btn"
@@ -125,14 +136,14 @@ function UrlBar(props: {
                 disabled={!props.canForward}
                 onClick={props.onForward}
             >
-                <span class="icon-arrow-right" />
+                <BiRegularRightArrowAlt size={17} />
             </button>
             <button
                 class="urlbar--nav-btn"
                 title="Reload"
                 onClick={props.onRefresh}
             >
-                <span class="icon-refresh" />
+                <TbOutlineRefresh size={17} />
             </button>
 
             <div class="urlbar--omnibox-wrap">
@@ -144,7 +155,7 @@ function UrlBar(props: {
                 >
                     <Show when={!props.isNewtab && !editing()}>
                         <span class="urlbar--lock">
-                            <span class="icon-lock" />
+                            <TbOutlineLock size={12} />
                         </span>
                     </Show>
                     <input
@@ -180,7 +191,7 @@ function UrlBar(props: {
                         onClick={() => commit()}
                         onMouseDown={e => e.preventDefault()}
                     >
-                        <span class="icon-arrow-right" />
+                        <TbOutlineArrowRight size={14} />
                     </button>
                 </div>
             </div>
@@ -455,7 +466,7 @@ export default function BrowserChrome() {
                             tabManager.activateTab(t.id);
                         }}
                     >
-                        <span class="icon-plus" />
+                        <TbOutlinePlus size={15} />
                     </button>
                 </div>
 
@@ -514,7 +525,7 @@ export default function BrowserChrome() {
                 </For>
                 <Show when={tabStore.tabs.length === 0}>
                     <div class="browser--empty">
-                        <span class="icon-globe browser--empty-icon" />
+                        <TbOutlineWorld size={40} class="browser--empty-icon" />
                         <p>No tabs open</p>
                         <button
                             onClick={() => {

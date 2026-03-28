@@ -24,7 +24,6 @@ const scriptPaths = [
     "/uv/uv.sw.js",
     "/scramjet/scramjet.all.js",
     "/scramjet_init.js",
-    "/sw.js",
 ];
 
 export default createHandler(

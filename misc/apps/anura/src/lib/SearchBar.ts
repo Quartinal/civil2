@@ -1,14 +1,16 @@
 import { EventEmitter } from "tseep";
 
-const topWin = top as any;
-
-interface ProxyEntry {
-    name: "uv" | "scramjet";
-    encode: (url: string) => string;
-    decode: (url: string) => string;
+declare global {
+    var __uv$config:
+        | {
+              prefix: string;
+              encodeUrl: (url: string) => string;
+              decodeUrl: (url: string) => string;
+          }
+        | undefined;
 }
 
-function isNavigableUrl(term: string): boolean {
+function isNavigableUrl(term: string) {
     try {
         const u = new URL(term);
         return /^https?:|^ftp:/.test(u.protocol);
@@ -16,22 +18,13 @@ function isNavigableUrl(term: string): boolean {
     return /^[\w-]+\.[a-z]{2,}/i.test(term);
 }
 
-function getProxies(): ProxyEntry[] {
-    const entries: ProxyEntry[] = [];
-
-    try {
-        const uvConfig = topWin.__uv$config;
-        if (uvConfig) {
-            entries.push({
-                name: "uv",
-                encode: (url: string) =>
-                    uvConfig.prefix + uvConfig.encodeUrl(url),
-                decode: (url: string) => uvConfig.decodeUrl(url),
-            });
-        }
-    } catch {}
-
-    return entries;
+function getUvConfig() {
+    if (
+        self.__uv$config?.prefix &&
+        typeof self.__uv$config?.encodeUrl === "function"
+    )
+        return self.__uv$config;
+    return null;
 }
 
 const searchEngines = [
@@ -44,28 +37,18 @@ const searchEngines = [
 class SearchBar extends EventEmitter<{
     submit: (frame: HTMLIFrameElement, term: string) => void;
 }> {
-    private proxies: ProxyEntry[] = [];
-
     constructor() {
         super();
-        this.proxies = getProxies();
         this.registerHandlers();
     }
 
     private registerHandlers() {
         this.on("submit", (frame, term) => {
-            const storedProxy = localStorage.getItem("proxy") || "uv";
-            let proxy = this.proxies.find(p => p.name === storedProxy);
-
-            if (!proxy) {
-                this.proxies = getProxies();
-                proxy =
-                    this.proxies.find(p => p.name === storedProxy) ??
-                    this.proxies[0];
-            }
-
-            if (!proxy) {
-                console.error("[SearchBar] No proxy available from top frame");
+            const uvConfig = getUvConfig();
+            if (!uvConfig) {
+                console.error(
+                    "[SearchBar] __uv$config not available... are /uv/uv.bundle.js and /uv/uv.config.js loaded?",
+                );
                 return;
             }
 
@@ -86,7 +69,8 @@ class SearchBar extends EventEmitter<{
                     `https://www.google.com/search?q=${encodeURIComponent(term)}`;
             }
 
-            const encoded = proxy.encode(normalizedTerm);
+            const encoded =
+                uvConfig.prefix + uvConfig.encodeUrl(normalizedTerm);
 
             try {
                 frame.contentWindow?.location.replace(encoded);

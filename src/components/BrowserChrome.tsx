@@ -8,7 +8,12 @@ import {
     batch,
 } from "solid-js";
 import { createStore, produce } from "solid-js/store";
-import { tabManager, Tab, resolveUrl, isNewtabUrl } from "~/lib/TabManager";
+import {
+    tabManager,
+    type Tab,
+    resolveUrl,
+    isNewtabUrl,
+} from "~/lib/TabManager";
 import searchBar from "~/lib/SearchBar";
 
 import { BiRegularLeftArrowAlt, BiRegularRightArrowAlt } from "solid-icons/bi";
