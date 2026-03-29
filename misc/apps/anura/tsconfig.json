@@ -13,6 +13,8 @@
         "paths": {
             "#lib/*": ["src/lib/*"],
             "#styles/*": ["src/styles/*"]
-        }
+        },
+        "ignoreDeprecations": "6.0",
+        "noUncheckedSideEffectImports": false
     }
 }

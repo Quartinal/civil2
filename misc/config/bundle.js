@@ -30,8 +30,17 @@ const basePlugins = [
     typescript({
         tsconfig: "../../tsconfig.json",
         tsconfigOverride: {
-            compilerOptions: { allowImportingTsExtensions: false },
-            exclude: ["config", "server.ts", "src", "misc/apps"],
+            compilerOptions: {
+                allowImportingTsExtensions: false,
+                rootDir: "../../",
+            },
+            exclude: [
+                "config",
+                "server.ts",
+                "src",
+                "misc/apps",
+                "app.config.ts",
+            ],
         },
     }),
     nodeResolve({ browser: true }),

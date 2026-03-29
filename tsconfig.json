@@ -19,6 +19,7 @@
             "$tests/*": ["tests/*"]
         },
         "baseUrl": ".",
-        "allowImportingTsExtensions": true
+        "allowImportingTsExtensions": true,
+        "ignoreDeprecations": "6.0"
     }
 }
