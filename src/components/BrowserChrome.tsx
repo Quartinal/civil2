@@ -13,6 +13,8 @@ import {
     type Tab,
     resolveUrl,
     isNewtabUrl,
+    isInternalUrl,
+    BROWSER_URLS,
 } from "~/lib/TabManager";
 import searchBar from "~/lib/SearchBar";
 
@@ -278,6 +280,31 @@ export default function BrowserChrome() {
     const [activeId, setActiveId] = createSignal<string | null>(null);
     const [tabBarWidth, setTabBarWidth] = createSignal(600);
     const [draggingId, setDraggingId] = createSignal<string | null>(null);
+    const [iframeIds, setIframeIds] = createSignal<string[]>([]);
+
+    const STORAGE_KEY = "browser-session";
+    const saveSession = () => {
+        try {
+            const tabs = tabStore.tabs.map(t => {
+                const browserKey = Object.entries(BROWSER_URLS).find(
+                    ([, v]) => v === t.url,
+                )?.[0];
+                return {
+                    url: browserKey ?? t.url,
+                    title: t.title,
+                    favicon: t.favicon,
+                };
+            });
+            const active = activeId();
+            const activeIndex = active
+                ? tabStore.tabs.findIndex(t => t.id === active)
+                : 0;
+            localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify({ tabs, activeIndex }),
+            );
+        } catch {}
+    };
 
     const iframeMap = new Map<string, HTMLIFrameElement>();
     const historyMap = new Map<string, { stack: string[]; cursor: number }>();
@@ -322,17 +349,26 @@ export default function BrowserChrome() {
         for (const e of entries) setTabBarWidth(e.contentRect.width);
     });
 
-    tabManager.on("tabAdded", tab => setTabStore("tabs", t => [...t, tab]));
+    tabManager.on("tabAdded", tab => {
+        setTabStore("tabs", t => [...t, tab]);
+        setIframeIds(ids => [...ids, tab.id]);
+        saveSession();
+    });
     tabManager.on("tabRemoved", id =>
         batch(() => {
             setTabStore("tabs", t => t.filter(tab => tab.id !== id));
+            setIframeIds(ids => ids.filter(i => i !== id));
             setActiveId(tabManager.activeId);
             iframeMap.delete(id);
             historyMap.delete(id);
+            saveSession();
         }),
     );
-    tabManager.on("tabActivated", id => setActiveId(id));
-    tabManager.on("tabUpdated", upd =>
+    tabManager.on("tabActivated", id => {
+        setActiveId(id);
+        saveSession();
+    });
+    tabManager.on("tabUpdated", upd => {
         setTabStore(
             "tabs",
             t => t.id === upd.id,
@@ -342,9 +378,21 @@ export default function BrowserChrome() {
                 t.isLoading = upd.isLoading;
                 t.favicon = upd.favicon;
             }),
-        ),
-    );
-    tabManager.on("tabMoved", () => setTabStore("tabs", [...tabManager.tabs]));
+        );
+        saveSession();
+    });
+    tabManager.on("tabMoved", (id, toIndex) => {
+        setTabStore(
+            "tabs",
+            produce(tabs => {
+                const from = tabs.findIndex(t => t.id === id);
+                if (from === -1 || from === toIndex) return;
+                const [tab] = tabs.splice(from, 1);
+                tabs.splice(toIndex, 0, tab);
+            }),
+        );
+        saveSession();
+    });
 
     const normalizeNav = (term: string): string => {
         try {
@@ -360,7 +408,12 @@ export default function BrowserChrome() {
         if (!iframe) return;
         pushHistory(id, url);
         tabManager.updateTab(id, { url, isLoading: true, title: "Loading…" });
-        bar.emit("submit", iframe, normalizeNav(url));
+
+        if (isInternalUrl(url)) {
+            iframe.src = url;
+        } else {
+            bar.emit("submit", iframe, normalizeNav(url));
+        }
     };
     const navigate = (id: string, url: string) =>
         navigateIframe(id, resolveUrl(url));
@@ -371,7 +424,11 @@ export default function BrowserChrome() {
     const registerIframe = (id: string, el: HTMLIFrameElement) => {
         iframeMap.set(id, el);
         el.addEventListener("load", () => {
-            if (!el.src || el.src === "about:blank") return;
+            let href: string | undefined;
+            try {
+                href = el.contentWindow?.location.href;
+            } catch {}
+            if (!href || href === "about:blank") return;
             try {
                 const docTitle = el.contentDocument?.title;
                 const favicon =
@@ -393,7 +450,16 @@ export default function BrowserChrome() {
             }
         });
         const tab = tabManager.tabs.find(t => t.id === id);
-        if (tab?.url) el.src = tab.url;
+        if (tab?.url) {
+            pushHistory(id, tab.url);
+            if (isInternalUrl(tab.url)) {
+                el.src = tab.url;
+            } else {
+                bar.ready.then(() =>
+                    bar.emit("submit", el, normalizeNav(tab.url)),
+                );
+            }
+        }
     };
 
     const startDrag = (tabId: string, e: PointerEvent) => {
@@ -411,9 +477,41 @@ export default function BrowserChrome() {
         const startY = e.clientY;
         const offsetX = e.clientX - tabRect.left;
 
+        const tabEls = Array.from(strip.querySelectorAll<HTMLElement>(".tab"));
+        const initialRects = tabEls.map(el => el.getBoundingClientRect());
+        const dragIdx = tabStore.tabs.findIndex(t => t.id === tabId);
+
+        const nonDragCenters: number[] = [];
+        for (let i = 0; i < initialRects.length; i++) {
+            if (i === dragIdx) continue;
+            nonDragCenters.push(
+                initialRects[i].left + initialRects[i].width / 2,
+            );
+        }
+
         let clone: HTMLDivElement | null = null;
         let dragging = false;
-        const THRESHOLD = 4;
+        let currentTargetIdx = dragIdx;
+        const THRESHOLD = 3;
+
+        const applyShifts = (targetIdx: number) => {
+            const w = tabRect.width;
+            tabEls.forEach((el, i) => {
+                if (i === dragIdx) return;
+                let shift = 0;
+                if (targetIdx > dragIdx && i > dragIdx && i <= targetIdx) {
+                    shift = -w;
+                } else if (
+                    targetIdx < dragIdx &&
+                    i >= targetIdx &&
+                    i < dragIdx
+                ) {
+                    shift = w;
+                }
+                el.style.transition = "transform 0.15s ease";
+                el.style.transform = shift ? `translateX(${shift}px)` : "";
+            });
+        };
 
         const onMove = (me: PointerEvent) => {
             const dx = me.clientX - startX;
@@ -423,8 +521,9 @@ export default function BrowserChrome() {
             if (!dragging) {
                 dragging = true;
                 setDraggingId(tabId);
+                tabManager.activateTab(tabId);
                 clone = tabEl.cloneNode(true) as HTMLDivElement;
-                clone.style.cssText = `position:fixed;top:${tabRect.top}px;left:${tabRect.left}px;width:${tabRect.width}px;height:${tabRect.height}px;margin:0;z-index:9999;pointer-events:none;`;
+                clone.style.cssText = `position:fixed;top:${tabRect.top}px;left:${tabRect.left}px;width:${tabRect.width}px;height:${tabRect.height}px;margin:0;z-index:9999;pointer-events:none;transform-origin:center;`;
                 clone.classList.remove("tab--active", "tab--dragging");
                 clone.classList.add("tab--drag-clone");
                 root.appendChild(clone);
@@ -436,33 +535,37 @@ export default function BrowserChrome() {
                 stripRect.left,
                 Math.min(stripRect.right - tabRect.width, rawLeft),
             );
-            clone.style.transform = `translateX(${clampedLeft - tabRect.left}px)`;
+            clone.style.transform = `translateX(${clampedLeft - tabRect.left}px) scale(1.02)`;
 
-            const centrX = clampedLeft + tabRect.width / 2;
-            const slots = Array.from(
-                strip.querySelectorAll<HTMLElement>(".tab:not(.tab--dragging)"),
-            );
-            const curIdx = tabStore.tabs.findIndex(t => t.id === tabId);
-            let tgtIdx = curIdx;
-            for (let i = 0; i < slots.length; i++) {
-                const r = slots[i].getBoundingClientRect();
-                if (centrX >= r.left && centrX < r.right) {
-                    tgtIdx = i;
-                    break;
-                }
-                if (i === slots.length - 1 && centrX >= r.right)
-                    tgtIdx = slots.length - 1;
+            const centerX = clampedLeft + tabRect.width / 2;
+            let targetIdx = 0;
+            for (const mid of nonDragCenters) {
+                if (centerX > mid) targetIdx++;
             }
-            if (tgtIdx !== curIdx) tabManager.moveTab(tabId, tgtIdx);
+            if (targetIdx >= dragIdx) targetIdx++;
+
+            if (targetIdx !== currentTargetIdx) {
+                currentTargetIdx = targetIdx;
+                applyShifts(targetIdx);
+            }
         };
 
         const onUp = () => {
             document.removeEventListener("pointermove", onMove);
             document.removeEventListener("pointerup", onUp);
             document.removeEventListener("pointercancel", onUp);
+
+            tabEls.forEach(el => {
+                el.style.transform = "";
+                el.style.transition = "";
+            });
+
             if (clone) {
                 clone.remove();
                 clone = null;
+            }
+            if (dragging && currentTargetIdx !== dragIdx) {
+                tabManager.moveTab(tabId, currentTargetIdx);
             }
             if (!dragging) {
                 tabManager.activateTab(tabId);
@@ -478,8 +581,35 @@ export default function BrowserChrome() {
 
     onMount(() => {
         if (tabStripRef) ro.observe(tabStripRef);
-        const t = tabManager.createTab("browser:newtab");
-        tabManager.activateTab(t.id);
+
+        let restored = false;
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                const session = JSON.parse(raw);
+                if (Array.isArray(session.tabs) && session.tabs.length > 0) {
+                    for (const saved of session.tabs) {
+                        const t = tabManager.createTab(saved.url);
+                        tabManager.updateTab(t.id, {
+                            title: saved.title || t.title,
+                            favicon: saved.favicon,
+                            isLoading: false,
+                        });
+                    }
+                    const idx = Math.min(
+                        Math.max(0, session.activeIndex ?? 0),
+                        tabManager.tabs.length - 1,
+                    );
+                    tabManager.activateTab(tabManager.tabs[idx].id);
+                    restored = true;
+                }
+            }
+        } catch {}
+
+        if (!restored) {
+            const t = tabManager.createTab("browser:newtab");
+            tabManager.activateTab(t.id);
+        }
 
         const onBrowserNavigate = (e: Event) => {
             const { tabId, url } = (
@@ -557,21 +687,25 @@ export default function BrowserChrome() {
                         const iframe = iframeMap.get(id);
                         if (!iframe) return;
                         tabManager.updateTab(id, { isLoading: true });
-                        bar.emit("submit", iframe, tab.url);
+                        if (isInternalUrl(tab.url)) {
+                            iframe.src = tab.url;
+                        } else {
+                            bar.emit("submit", iframe, tab.url);
+                        }
                     }}
                 />
             </div>
 
             <div class="browser--viewport">
-                <For each={tabStore.tabs}>
-                    {tab => (
+                <For each={iframeIds()}>
+                    {id => (
                         <iframe
                             title="Proxied browser-in-browser webpage"
                             class="browser--frame"
                             classList={{
-                                "browser--frame--active": tab.id === activeId(),
+                                "browser--frame--active": id === activeId(),
                             }}
-                            ref={el => registerIframe(tab.id, el)}
+                            ref={el => registerIframe(id, el)}
                         />
                     )}
                 </For>

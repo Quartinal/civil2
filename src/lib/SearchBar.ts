@@ -51,6 +51,7 @@ class SearchBar
     debugInfo!: ISearchBar["debugInfo"];
     proxyObjMap: ISearchBar["proxyObjMap"];
     searchEngineMap: ISearchBar["searchEngineMap"];
+    ready: Promise<void>;
 
     static #keys = ["lastUrlSearched", "url", "debugInfo"] as const;
 
@@ -63,9 +64,15 @@ class SearchBar
         };
 
         if (document.readyState === "complete") {
-            runSetup();
+            this.ready = runSetup();
         } else {
-            window.addEventListener("load", runSetup, { once: true });
+            this.ready = new Promise<void>(resolve => {
+                window.addEventListener(
+                    "load",
+                    () => runSetup().then(resolve),
+                    { once: true },
+                );
+            });
         }
 
         const isJson = (string: string) => {
@@ -150,11 +157,13 @@ class SearchBar
                     proxy.value.encodeUrl!(normalizedTerm),
             );
 
-            track("Internal site visit", {
-                props: {
-                    url: isUrl(term) ? proxy.value.decodeUrl!(term) : term,
-                },
-            });
+            if (window.location.host === "civil.quartinal.me") {
+                track("Internal site visit", {
+                    props: {
+                        url: isUrl(term) ? proxy.value.decodeUrl!(term) : term,
+                    },
+                });
+            }
         });
     }
 }

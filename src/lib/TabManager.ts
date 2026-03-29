@@ -39,6 +39,11 @@ export function isNewtabUrl(url: string) {
     );
 }
 
+export function isInternalUrl(url: string): boolean {
+    if (url === "about:blank" || url.startsWith("browser:")) return true;
+    return Object.values(BROWSER_URLS).some(v => url === v);
+}
+
 export type TabManagerEvents = {
     tabAdded: (tab: Tab) => void;
     tabRemoved: (id: string) => void;

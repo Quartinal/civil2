@@ -37,8 +37,17 @@ const searchEngines = [
 class SearchBar extends EventEmitter<{
     submit: (frame: HTMLIFrameElement, term: string) => void;
 }> {
+    ready: Promise<void>;
+
     constructor() {
         super();
+        this.ready = new Promise<void>(resolve => {
+            const check = () => {
+                if (getUvConfig()) resolve();
+                else setTimeout(check, 50);
+            };
+            check();
+        });
         this.registerHandlers();
     }
 

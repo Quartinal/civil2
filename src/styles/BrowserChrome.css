@@ -75,6 +75,7 @@
     min-width: 0;
     flex-shrink: 0;
     overflow: visible;
+    user-select: none;
 
     background: var(--br-crust);
     color: var(--br-overlay0);
@@ -90,10 +91,10 @@
     content: "";
     position: absolute;
     left: -1px;
-    top: 25%;
-    height: 50%;
+    top: 20%;
+    height: 60%;
     width: 1px;
-    background: var(--br-surface0);
+    background: var(--br-surface1);
     pointer-events: none;
 }
 .tab--active + .tab::after,
@@ -144,7 +145,7 @@
 }
 
 .tab--dragging {
-    opacity: 0.25;
+    visibility: hidden;
     pointer-events: none;
 }
 
