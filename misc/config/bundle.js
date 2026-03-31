@@ -36,10 +36,11 @@ const basePlugins = [
             },
             exclude: [
                 "config",
+                "tests",
                 "server.ts",
                 "src",
                 "misc/apps",
-                "app.config.ts",
+                "*.config.ts",
             ],
         },
     }),
