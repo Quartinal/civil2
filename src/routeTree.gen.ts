@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as NewtabRouteImport } from './routes/newtab'
 import { Route as BenchmarksRouteImport } from './routes/benchmarks'
+import { Route as BanRouteImport } from './routes/ban'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -22,6 +23,11 @@ const NewtabRoute = NewtabRouteImport.update({
 const BenchmarksRoute = BenchmarksRouteImport.update({
   id: '/benchmarks',
   path: '/benchmarks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BanRoute = BanRouteImport.update({
+  id: '/ban',
+  path: '/ban',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -38,12 +44,14 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/ban': typeof BanRoute
   '/benchmarks': typeof BenchmarksRoute
   '/newtab': typeof NewtabRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/ban': typeof BanRoute
   '/benchmarks': typeof BenchmarksRoute
   '/newtab': typeof NewtabRoute
 }
@@ -51,20 +59,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/ban': typeof BanRoute
   '/benchmarks': typeof BenchmarksRoute
   '/newtab': typeof NewtabRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/benchmarks' | '/newtab'
+  fullPaths: '/' | '/about' | '/ban' | '/benchmarks' | '/newtab'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/benchmarks' | '/newtab'
-  id: '__root__' | '/' | '/about' | '/benchmarks' | '/newtab'
+  to: '/' | '/about' | '/ban' | '/benchmarks' | '/newtab'
+  id: '__root__' | '/' | '/about' | '/ban' | '/benchmarks' | '/newtab'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  BanRoute: typeof BanRoute
   BenchmarksRoute: typeof BenchmarksRoute
   NewtabRoute: typeof NewtabRoute
 }
@@ -83,6 +93,13 @@ declare module '@tanstack/solid-router' {
       path: '/benchmarks'
       fullPath: '/benchmarks'
       preLoaderRoute: typeof BenchmarksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ban': {
+      id: '/ban'
+      path: '/ban'
+      fullPath: '/ban'
+      preLoaderRoute: typeof BanRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -105,6 +122,7 @@ declare module '@tanstack/solid-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  BanRoute: BanRoute,
   BenchmarksRoute: BenchmarksRoute,
   NewtabRoute: NewtabRoute,
 }

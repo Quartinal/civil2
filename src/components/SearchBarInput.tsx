@@ -1,8 +1,7 @@
 import { createSignal, onMount, onCleanup } from "solid-js";
 import genBCKey from "~/lib/genBCKey";
-import "~/styles/SearchBarInput.css";
-
-const WS_URL = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/suggestions`;
+import { WS_URL } from "~/lib/browserHelpers";
+import * as s from "~/styles/SearchBar.css";
 
 const isProbablyUrl = (value: string) => {
     try {
@@ -25,19 +24,16 @@ export default function SearchBarInput(props: Props) {
 
     const bcKey = genBCKey("typed_search");
     const channel = new BroadcastChannel(bcKey);
-
     const broadcast = (value: string) =>
         channel.postMessage({ type: "input", value });
 
     const handleInput = (value: string) => {
         setQuery(value);
         broadcast(value);
-
         if (!value) {
             props.onSuggestions([]);
             return;
         }
-
         if (!isProbablyUrl(value)) {
             if (ws?.readyState === WebSocket.OPEN)
                 ws.send(JSON.stringify({ q: value }));
@@ -61,14 +57,12 @@ export default function SearchBarInput(props: Props) {
                     props.onSuggestions(suggestions);
             } catch {}
         };
-
         channel.onmessage = event => {
             if (event.data?.type === "input" && inputRef) {
                 inputRef.value = event.data.value;
                 setQuery(event.data.value);
             }
         };
-
         onCleanup(() => {
             ws?.close();
             channel.close();
@@ -77,12 +71,12 @@ export default function SearchBarInput(props: Props) {
 
     return (
         <div
-            class="sb-input-wrapper"
-            classList={{ "sb-input-wrapper--blur": props.showBlur }}
+            class={s.sbInputWrapper}
+            classList={{ [s.sbInputWrapperBlur]: props.showBlur }}
         >
             <input
                 ref={inputRef}
-                class="sb-input"
+                class={s.sbInput}
                 value={query()}
                 onInput={e => handleInput(e.currentTarget.value)}
                 onKeyDown={e => e.key === "Enter" && handleSubmit()}
@@ -92,7 +86,7 @@ export default function SearchBarInput(props: Props) {
                 autocomplete="off"
                 data-enable-grammarly="false"
             />
-            <button class="sb-button" onClick={() => handleSubmit()}>
+            <button class={s.sbButton} onClick={() => handleSubmit()}>
                 Unblock
             </button>
         </div>

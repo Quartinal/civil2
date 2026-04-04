@@ -1,27 +1,21 @@
-import "@fontsource/rubik/500";
-import "@fontsource/rubik/400";
-import "@catppuccin/palette/css/catppuccin.css";
-import "~/styles/NewTabPage.css";
 import SearchBarContainer from "./SearchBarContainer";
 import { Show } from "solid-js";
+import * as s from "~/styles/NewTabPage.css";
 
 export default function NewTabPage() {
-    const isInIframe = () => window.self !== window.top;
-
     return (
-        <div class="newtab-root">
-            <div class="welcome-text">
+        <div class={s.newtabRoot}>
+            <div class={s.welcomeText}>
                 <h1>Welcome to Civil Proxy!</h1>
+                <Show when={window.self !== window.top}>
+                    <div class={s.searchbarWrap}>
+                        <SearchBarContainer inline />
+                    </div>
+                </Show>
                 <p>
                     It's <b>your</b> web proxy.
                 </p>
             </div>
-
-            <Show when={isInIframe()}>
-                <div class="searchbar">
-                    <SearchBarContainer />
-                </div>
-            </Show>
         </div>
     );
 }

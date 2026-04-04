@@ -1,194 +1,36 @@
-import { onMount, onCleanup, createMemo, Show, For } from "solid-js";
-import { init, graphic } from "echarts";
-import { flavors } from "@catppuccin/palette";
-import type { ColorName } from "@catppuccin/palette";
-import type { EChartsOption } from "echarts";
+import {
+    onMount,
+    onCleanup,
+    createMemo,
+    createEffect,
+    Show,
+    For,
+} from "solid-js";
+import { init } from "echarts/core";
 
-const macchiatoColors = flavors.macchiato.colors;
-const hex = ({ rgb: { r, g, b } }: { rgb: { [key: string]: number } }) =>
-    `#${[r, g, b].map(v => v.toString(16).padStart(2, "0")).join("")}`;
-
-const colors = Object.fromEntries(
-    Object.entries(macchiatoColors).map(([name, color]) => [name, hex(color)]),
-) as Record<ColorName, string>;
-
-const IMPL_METADATA = {
-    "UltraViolet new encoding method": {
-        short: "UltraViolet new",
-        color: colors.blue,
-        tag: "JavaScript",
-    },
-    "UltraViolet old encoding method": {
-        short: "UltraViolet old",
-        color: colors.mauve,
-        tag: "JavaScript",
-    },
-    "Civil C++/WebAssembly encoding method": {
-        short: "C++/WASM",
-        color: colors.green,
-        tag: "WebAssembly",
-    },
-};
-
-type ImplMetadata = {
-    short: string;
-    color: string;
-    tag: string;
-};
-
-function meta(impl: string): ImplMetadata {
-    const lower = impl.toLowerCase();
-    if (lower.includes("new"))
-        return IMPL_METADATA["UltraViolet new encoding method"];
-    if (lower.includes("old"))
-        return IMPL_METADATA["UltraViolet old encoding method"];
-    if (
-        lower.includes("civil") ||
-        lower.includes("wasm") ||
-        lower.includes("c++")
-    )
-        return IMPL_METADATA["Civil C++/WebAssembly encoding method"];
-    return IMPL_METADATA["Civil C++/WebAssembly encoding method"];
-}
-
-const FONT = '"Rubik", sans-serif';
-
-const axisBase = {
-    axisLine: { lineStyle: { color: colors.surface2 } },
-    axisTick: { show: false },
-    splitLine: {
-        lineStyle: { color: colors.surface0, type: "dashed" as const },
-    },
-    axisLabel: { color: colors.subtext0, fontFamily: FONT, fontSize: 11 },
-};
-
-const gridBase = {
-    left: "2%",
-    right: "3%",
-    top: "22%",
-    bottom: "10%",
-    containLabel: true,
-};
-
-const tooltipBase = {
-    trigger: "axis" as const,
-    axisPointer: { type: "shadow" as const },
-    backgroundColor: colors.mantle,
-    borderColor: colors.surface2,
-    borderWidth: 1,
-    textStyle: { color: colors.text, fontFamily: FONT, fontSize: 12 },
-    extraCssText: "box-shadow: 0 8px 32px rgba(0,0,0,0.4); border-radius: 8px;",
-};
-
-const titleBase = (text: string, subtext: string) => ({
-    text,
-    subtext,
-    left: "center" as const,
-    top: 10,
-    textStyle: {
-        color: colors.text,
-        fontSize: 11,
-        fontWeight: 400,
-        letterSpacing: 3,
-        fontFamily: FONT,
-    },
-    subtextStyle: { color: colors.subtext0, fontSize: 10, fontFamily: FONT },
-});
-
-function gradient(top: string, bottom: string) {
-    return new graphic.LinearGradient(0, 0, 0, 1, [
-        { offset: 0, color: top },
-        { offset: 1, color: bottom },
-    ]);
-}
-
-function barSeries(
-    implColors: string[],
-    values: number[],
-    labelSuffix = "",
-    labelColors?: string[],
-    topAlpha = "",
-) {
-    return {
-        type: "bar" as const,
-        barMaxWidth: 56,
-        emphasis: {
-            itemStyle: { shadowBlur: 20, shadowColor: implColors[0] + "66" },
-        },
-        data: values.map((value, i) => ({
-            value,
-            itemStyle: {
-                borderRadius: [5, 5, 0, 0],
-                color: gradient(implColors[i] + topAlpha, implColors[i] + "33"),
-            },
-            label: {
-                show: true,
-                position: "top" as const,
-                color: labelColors?.[i] ?? implColors[i],
-                fontFamily: FONT,
-                fontSize: 11,
-                fontWeight: 700,
-                formatter: `${value}${labelSuffix}`,
-            },
-        })),
-    };
-}
-
-type Run = {
-    impl: string;
-    total_ms: number;
-    ops_per_sec: number;
-    avg_ns_per_op: number;
-};
-
-type Comparison = {
-    baseline_impl: string;
-    wasm_ops_per_sec: number | null;
-    baseline_ops_per_sec: number;
-    speedup_factor: number | null;
-};
+import {
+    colors,
+    getImplMeta,
+    axisBase,
+    gridBase,
+    tooltipBase,
+    titleBase,
+    gradient,
+    barSeries,
+    styles,
+    heroCardStyle,
+    heroNumberStyle,
+    pillStyle,
+    dotStyle,
+    implTagStyle,
+    tableCellStyle,
+    type BenchmarkData,
+    type EChartsOption,
+} from "~/lib/benchmarkConfig";
 
 interface BenchmarkChartProps {
-    data: {
-        iterations: number;
-        runs: Run[];
-        comparisons: Comparison[];
-    };
+    data: BenchmarkData;
 }
-
-const styles = {
-    root: `background:${colors.base};min-height:100vh;color:${colors.text};font-family:${FONT};padding:2.5rem 2rem 3rem;box-sizing:border-box`,
-    inner: `max-width:1100px;margin:0 auto`,
-    chip: `display:inline-flex;align-items:center;gap:6px;background:${colors.surface0};border:1px solid ${colors.surface2};border-radius:999px;padding:3px 12px;font-size:10px;color:${colors.subtext0};letter-spacing:1px;text-transform:uppercase;margin-bottom:1.25rem`,
-    h1: `margin:0 0 .3rem;font-size:clamp(1.6rem,4vw,2.6rem);font-weight:700;letter-spacing:-.04em;color:${colors.text};font-family:${FONT}`,
-    subheading: `margin:0 0 2rem;color:${colors.subtext1};font-size:.82rem;font-weight:400`,
-    heroLabel: `font-size:.75rem;color:${colors.subtext0};margin-top:.5rem;text-align:center`,
-    pills: `display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:2rem`,
-    grid2: `display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.25rem;margin-bottom:1.25rem`,
-    card: `background:${colors.mantle};border:1px solid ${colors.surface0};border-radius:12px;overflow:hidden`,
-    chartBox: `width:100%;height:300px`,
-    fullCard: `background:${colors.mantle};border:1px solid ${colors.surface0};border-radius:12px;overflow:hidden;margin-bottom:1.25rem`,
-    fullChart: `width:100%;height:280px`,
-    tableWrap: `background:${colors.mantle};border:1px solid ${colors.surface0};border-radius:12px;overflow:hidden`,
-    tableHead: `padding:.65rem 1.25rem;border-bottom:1px solid ${colors.surface0};font-size:.65rem;color:${colors.subtext0};letter-spacing:.12em;text-transform:uppercase`,
-    table: `width:100%;border-collapse:collapse;font-size:.78rem`,
-    th: `padding:.6rem 1.25rem;text-align:left;color:${colors.subtext0};font-weight:500;white-space:nowrap;border-bottom:1px solid ${colors.surface0}`,
-    implCell: `display:inline-flex;align-items:center;gap:8px`,
-    footer: `text-align:center;margin-top:2rem;color:${colors.overlay0};font-size:.68rem;letter-spacing:.08em`,
-} as const;
-
-const heroCard = (win: boolean) =>
-    `display:inline-flex;flex-direction:column;align-items:center;background:${colors.mantle};border:1px solid ${win ? colors.green : colors.red}33;border-radius:14px;padding:1.5rem 3rem 1.25rem;box-shadow:0 0 60px ${win ? colors.green : colors.red}11;margin-bottom:2.5rem`;
-const heroNumber = (win: boolean) =>
-    `font-size:clamp(3rem,7vw,4.5rem);font-weight:900;color:${win ? colors.green : colors.red};line-height:1;letter-spacing:-.05em`;
-const pill = (color: string) =>
-    `display:inline-flex;align-items:center;gap:6px;background:${colors.surface0};border:1px solid ${color}44;border-radius:999px;padding:4px 12px;font-size:.72rem;color:${colors.subtext1}`;
-const dot = (color: string) =>
-    `width:7px;height:7px;border-radius:50%;background:${color};flex-shrink:0`;
-const implTag = (color: string) =>
-    `background:${color}22;color:${color};border-radius:4px;padding:1px 6px;font-size:.65rem;font-weight:700`;
-const tableCell = (rowIndex: number) =>
-    `padding:.65rem 1.25rem;border-bottom:1px solid ${colors.surface0};background:${rowIndex % 2 ? colors.surface0 + "44" : "transparent"}`;
 
 export default function BenchmarkChart(props: BenchmarkChartProps) {
     const runs = createMemo(() => props.data?.runs ?? []);
@@ -200,32 +42,30 @@ export default function BenchmarkChart(props: BenchmarkChartProps) {
             ({ impl }) => impl.includes("wasm") || impl.includes("c++"),
         ),
     );
-    const jsRow = createMemo(() =>
-        runs().filter(
-            ({ impl }) => !(impl.includes("wasm") || impl.includes("c++")),
-        ),
-    );
     const bestJs = createMemo(() =>
-        jsRow().reduce<Run | null>(
-            (best, current) =>
-                (best?.ops_per_sec ?? 0) > current.ops_per_sec ? best : current,
-            null,
-        ),
+        runs()
+            .filter(
+                ({ impl }) => !(impl.includes("wasm") || impl.includes("c++")),
+            )
+            .reduce<(typeof runs extends () => (infer R)[] ? R : never) | null>(
+                (best, cur) =>
+                    (best?.ops_per_sec ?? 0) > cur.ops_per_sec ? best : cur,
+                null,
+            ),
     );
     const headline = createMemo(() => {
-        const wasmRun = wasmRow();
-        const bestJsRun = bestJs();
-        if (!wasmRun || !bestJsRun) return null;
-        return (wasmRun.ops_per_sec / bestJsRun.ops_per_sec).toFixed(2);
+        const w = wasmRow(),
+            b = bestJs();
+        return w && b ? (w.ops_per_sec / b.ops_per_sec).toFixed(2) : null;
     });
-    const wasmWins = createMemo(() => parseFloat(headline()!) >= 1.0);
+    const wasmWins = createMemo(() => parseFloat(headline() ?? "0") >= 1.0);
 
-    const throughputOption = createMemo<EChartsOption | {}>(() => {
-        const runners = runs();
-        if (!runners.length) return {};
-        const names = runners.map(({ impl }) => meta(impl).short);
-        const implColors = runners.map(({ impl }) => meta(impl).color);
-        const values = runners.map(
+    const throughputOption = createMemo<EChartsOption | object>(() => {
+        const r = runs();
+        if (!r.length) return {};
+        const names = r.map(({ impl }) => getImplMeta(impl).short);
+        const implColors = r.map(({ impl }) => getImplMeta(impl).color);
+        const values = r.map(
             ({ ops_per_sec }) => +(ops_per_sec / 1e6).toFixed(4),
         );
         return {
@@ -236,12 +76,12 @@ export default function BenchmarkChart(props: BenchmarkChartProps) {
             ),
             tooltip: {
                 ...tooltipBase,
-                formatter: (params: any[]) => {
-                    const point = params[0];
-                    const color = implColors[point.dataIndex];
+                formatter: (params: { dataIndex: number; value: number }[]) => {
+                    const p = params[0];
+                    const c = implColors[p.dataIndex];
                     return (
-                        `<span style="color:${color};font-weight:700">${names[point.dataIndex]}</span><br/>` +
-                        `<span style="font-size:16px;font-weight:700;color:${color}">${point.value}</span>` +
+                        `<span style="color:${c};font-weight:700">${names[p.dataIndex]}</span><br/>` +
+                        `<span style="font-size:16px;font-weight:700;color:${c}">${p.value}</span>` +
                         `<span style="color:${colors.subtext0}"> Mops/s</span>`
                     );
                 },
@@ -253,7 +93,7 @@ export default function BenchmarkChart(props: BenchmarkChartProps) {
                 name: "Mops/s",
                 nameTextStyle: {
                     color: colors.subtext0,
-                    fontFamily: FONT,
+                    fontFamily: '"Rubik", sans-serif',
                     fontSize: 10,
                 },
                 ...axisBase,
@@ -262,14 +102,12 @@ export default function BenchmarkChart(props: BenchmarkChartProps) {
         };
     });
 
-    const latencyOption = createMemo<EChartsOption | {}>(() => {
-        const runners = runs();
-        if (!runners.length) return {};
-        const names = runners.map(({ impl }) => meta(impl).short);
-        const implColors = runners.map(({ impl }) => meta(impl).color);
-        const values = runners.map(
-            ({ avg_ns_per_op }) => +avg_ns_per_op.toFixed(1),
-        );
+    const latencyOption = createMemo<EChartsOption | object>(() => {
+        const r = runs();
+        if (!r.length) return {};
+        const names = r.map(({ impl }) => getImplMeta(impl).short);
+        const implColors = r.map(({ impl }) => getImplMeta(impl).color);
+        const values = r.map(({ avg_ns_per_op }) => +avg_ns_per_op.toFixed(1));
         return {
             backgroundColor: "transparent",
             title: titleBase(
@@ -278,12 +116,12 @@ export default function BenchmarkChart(props: BenchmarkChartProps) {
             ),
             tooltip: {
                 ...tooltipBase,
-                formatter: (params: any[]) => {
-                    const point = params[0];
-                    const color = implColors[point.dataIndex];
+                formatter: (params: { dataIndex: number; value: number }[]) => {
+                    const p = params[0];
+                    const c = implColors[p.dataIndex];
                     return (
-                        `<span style="color:${color};font-weight:700">${names[point.dataIndex]}</span><br/>` +
-                        `<span style="font-size:16px;font-weight:700;color:${color}">${point.value}</span>` +
+                        `<span style="color:${c};font-weight:700">${names[p.dataIndex]}</span><br/>` +
+                        `<span style="font-size:16px;font-weight:700;color:${c}">${p.value}</span>` +
                         `<span style="color:${colors.subtext0}"> ns/op</span>`
                     );
                 },
@@ -295,7 +133,7 @@ export default function BenchmarkChart(props: BenchmarkChartProps) {
                 name: "ns/op",
                 nameTextStyle: {
                     color: colors.subtext0,
-                    fontFamily: FONT,
+                    fontFamily: '"Rubik", sans-serif',
                     fontSize: 10,
                 },
                 ...axisBase,
@@ -304,11 +142,11 @@ export default function BenchmarkChart(props: BenchmarkChartProps) {
         };
     });
 
-    const speedupOption = createMemo<EChartsOption | {}>(() => {
+    const speedupOption = createMemo<EChartsOption | object>(() => {
         const comps = comparisons();
         if (!comps.length || comps[0].speedup_factor == null) return {};
         const names = comps.map(
-            ({ baseline_impl }) => `vs ${meta(baseline_impl).short}`,
+            ({ baseline_impl }) => `vs ${getImplMeta(baseline_impl).short}`,
         );
         const values = comps.map(
             ({ speedup_factor }) => +(speedup_factor as number).toFixed(3),
@@ -317,7 +155,7 @@ export default function BenchmarkChart(props: BenchmarkChartProps) {
         const implColors = winFlags.map(win =>
             win ? colors.green : colors.red,
         );
-        const bottomColors = winFlags.map(
+        const botColors = winFlags.map(
             win => (win ? colors.teal : colors.maroon) + "44",
         );
         return {
@@ -325,13 +163,13 @@ export default function BenchmarkChart(props: BenchmarkChartProps) {
             title: titleBase("SPEEDUP FACTOR", "Wasm / JS  (1.0 is parity)"),
             tooltip: {
                 ...tooltipBase,
-                formatter: (params: any[]) => {
-                    const point = params[0];
-                    const win = point.value >= 1.0;
-                    const color = win ? colors.green : colors.red;
+                formatter: (params: { dataIndex: number; value: number }[]) => {
+                    const p = params[0];
+                    const win = p.value >= 1.0;
+                    const c = win ? colors.green : colors.red;
                     return (
-                        `<span style="color:${colors.subtext1}">${names[point.dataIndex]}</span><br/>` +
-                        `<span style="font-size:20px;font-weight:900;color:${color}">${point.value}×</span>` +
+                        `<span style="color:${colors.subtext1}">${names[p.dataIndex]}</span><br/>` +
+                        `<span style="font-size:20px;font-weight:900;color:${c}">${p.value}×</span>` +
                         `<span style="color:${colors.subtext0}"> ${win ? "faster" : "slower"}</span>`
                     );
                 },
@@ -344,7 +182,7 @@ export default function BenchmarkChart(props: BenchmarkChartProps) {
                 min: 0,
                 nameTextStyle: {
                     color: colors.subtext0,
-                    fontFamily: FONT,
+                    fontFamily: '"Rubik", sans-serif',
                     fontSize: 10,
                 },
                 ...axisBase,
@@ -357,13 +195,13 @@ export default function BenchmarkChart(props: BenchmarkChartProps) {
                         value,
                         itemStyle: {
                             borderRadius: [5, 5, 0, 0],
-                            color: gradient(implColors[i], bottomColors[i]),
+                            color: gradient(implColors[i], botColors[i]),
                         },
                         label: {
                             show: true,
                             position: "top" as const,
                             color: implColors[i],
-                            fontFamily: FONT,
+                            fontFamily: '"Rubik", sans-serif',
                             fontSize: 13,
                             fontWeight: 900,
                             formatter: `${value}×`,
@@ -383,7 +221,7 @@ export default function BenchmarkChart(props: BenchmarkChartProps) {
                                 label: {
                                     formatter: "parity",
                                     color: colors.overlay0,
-                                    fontFamily: FONT,
+                                    fontFamily: '"Rubik", sans-serif',
                                     fontSize: 10,
                                 },
                             },
@@ -399,28 +237,42 @@ export default function BenchmarkChart(props: BenchmarkChartProps) {
     let refSpeedup!: HTMLDivElement;
 
     onMount(() => {
-        const initChart = (el: HTMLDivElement, option: EChartsOption | {}) => {
-            if (!Object.keys(option).length) return null;
-            const chart = init(el, null, { renderer: "canvas" });
-            chart.setOption(option as EChartsOption);
-            return chart;
+        const maybeInit = (el: HTMLDivElement, opt: EChartsOption | object) => {
+            if (!Object.keys(opt).length) return null;
+            const c = init(el, null, { renderer: "canvas" });
+            c.setOption(opt as EChartsOption);
+            return c;
         };
 
-        const chartInstances = [
-            initChart(refThroughput, throughputOption()),
-            initChart(refLatency, latencyOption()),
-            initChart(refSpeedup, speedupOption()),
-        ].filter((chart): chart is NonNullable<typeof chart> => chart !== null);
+        const cThroughput = maybeInit(refThroughput, throughputOption());
+        const cLatency = maybeInit(refLatency, latencyOption());
+        const cSpeedup = maybeInit(refSpeedup, speedupOption());
 
-        const resizeObserver = new ResizeObserver(() =>
-            chartInstances.forEach(chart => chart.resize()),
-        );
-        [refThroughput, refLatency, refSpeedup].forEach(el =>
-            resizeObserver.observe(el),
-        );
+        createEffect(() => {
+            const opt = throughputOption();
+            if (cThroughput && Object.keys(opt).length)
+                cThroughput.setOption(opt as EChartsOption, true);
+        });
+        createEffect(() => {
+            const opt = latencyOption();
+            if (cLatency && Object.keys(opt).length)
+                cLatency.setOption(opt as EChartsOption, true);
+        });
+        createEffect(() => {
+            const opt = speedupOption();
+            if (cSpeedup && Object.keys(opt).length)
+                cSpeedup.setOption(opt as EChartsOption, true);
+        });
+
+        const charts = [cThroughput, cLatency, cSpeedup].filter(
+            Boolean,
+        ) as NonNullable<typeof cThroughput>[];
+        const ro = new ResizeObserver(() => charts.forEach(c => c.resize()));
+        [refThroughput, refLatency, refSpeedup].forEach(el => ro.observe(el));
+
         onCleanup(() => {
-            resizeObserver.disconnect();
-            chartInstances.forEach(chart => chart.dispose());
+            ro.disconnect();
+            charts.forEach(c => c.dispose());
         });
     });
 
@@ -442,8 +294,8 @@ export default function BenchmarkChart(props: BenchmarkChartProps) {
 
                 <Show when={headline()}>
                     <div>
-                        <div style={heroCard(wasmWins())}>
-                            <div style={heroNumber(wasmWins())}>
+                        <div style={heroCardStyle(wasmWins())}>
+                            <div style={heroNumberStyle(wasmWins())}>
                                 {headline()}×
                             </div>
                             <div style={styles.heroLabel}>
@@ -458,13 +310,13 @@ export default function BenchmarkChart(props: BenchmarkChartProps) {
                 <div style={styles.pills}>
                     <For each={runs()}>
                         {run => {
-                            const implMeta = meta(run.impl);
+                            const m = getImplMeta(run.impl);
                             return (
-                                <span style={pill(implMeta.color)}>
-                                    <span style={dot(implMeta.color)} />
-                                    {implMeta.short}
-                                    <span style={implTag(implMeta.color)}>
-                                        {implMeta.tag}
+                                <span style={pillStyle(m.color)}>
+                                    <span style={dotStyle(m.color)} />
+                                    {m.short}
+                                    <span style={implTagStyle(m.color)}>
+                                        {m.tag}
                                     </span>
                                 </span>
                             );
@@ -516,14 +368,14 @@ export default function BenchmarkChart(props: BenchmarkChartProps) {
                         <tbody>
                             <For each={runs()}>
                                 {(run, index) => {
-                                    const implMeta = meta(run.impl);
+                                    const m = getImplMeta(run.impl);
                                     return (
                                         <tr>
-                                            <td style={tableCell(index())}>
+                                            <td style={tableCellStyle(index())}>
                                                 <span style={styles.implCell}>
                                                     <span
-                                                        style={dot(
-                                                            implMeta.color,
+                                                        style={dotStyle(
+                                                            m.color,
                                                         )}
                                                     />
                                                     <span
@@ -534,19 +386,19 @@ export default function BenchmarkChart(props: BenchmarkChartProps) {
                                                 </span>
                                             </td>
                                             <td
-                                                style={`${tableCell(index())};color:${implMeta.color};font-weight:700`}
+                                                style={`${tableCellStyle(index())};color:${m.color};font-weight:700`}
                                             >
                                                 {(
                                                     run.ops_per_sec / 1e6
                                                 ).toFixed(4)}
                                             </td>
                                             <td
-                                                style={`${tableCell(index())};color:${colors.subtext1}`}
+                                                style={`${tableCellStyle(index())};color:${colors.subtext1}`}
                                             >
                                                 {run.avg_ns_per_op.toFixed(1)}
                                             </td>
                                             <td
-                                                style={`${tableCell(index())};color:${colors.subtext1}`}
+                                                style={`${tableCellStyle(index())};color:${colors.subtext1}`}
                                             >
                                                 {run.total_ms.toFixed(1)}
                                             </td>

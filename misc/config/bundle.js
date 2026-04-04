@@ -10,6 +10,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import nodePolyfills from "rollup-plugin-polyfill-node";
 import terser from "@rollup/plugin-terser";
 import alias from "@rollup/plugin-alias";
+import { visualizer } from "rollup-plugin-visualizer";
 
 const require = createRequire(import.meta.url);
 const { globSync: fastGlobSync } = require("fast-glob");
@@ -17,6 +18,8 @@ const { globSync: fastGlobSync } = require("fast-glob");
 const configFiles = fastGlobSync(["./**/*.config.ts", "./**/*.config.js"]);
 
 const { green } = createColors();
+
+const useVisualizer = process.argv.includes("--visualize");
 
 await rimraf("../../dist");
 
@@ -46,7 +49,42 @@ const basePlugins = [
     }),
     nodeResolve({ browser: true }),
     commonjs(),
-    terser(),
+    terser({
+        compress: {
+            passes: 3,
+            unsafe: true,
+            unsafe_arrows: true,
+            unsafe_comps: true,
+            unsafe_methods: true,
+            unsafe_proto: true,
+            unsafe_regexp: true,
+            unsafe_undefined: true,
+            pure_getters: true,
+            inline: 3,
+            evaluate: true,
+            dead_code: true,
+            drop_debugger: true,
+            negate_iife: false,
+            sequences: true,
+            conditionals: true,
+            comparisons: true,
+            if_return: true,
+            join_vars: true,
+            collapse_vars: true,
+            reduce_vars: true,
+            hoist_funs: true,
+            loops: true,
+            typeofs: true,
+        },
+        mangle: {
+            toplevel: true,
+            safari10: true,
+        },
+        format: {
+            comments: false,
+            ascii_only: true,
+        },
+    }),
 ];
 
 const swPlugins = [...basePlugins];
@@ -75,8 +113,21 @@ const otherInput = {
 for (const [name, file] of Object.entries(otherInput)) {
     const bundle = await rollup({
         input: file,
-        treeshake: true,
-        plugins,
+        treeshake: {
+            propertyReadSideEffects: false,
+            unknownGlobalSideEffects: false,
+        },
+        plugins: [
+            ...plugins,
+            ...(useVisualizer
+                ? [
+                      visualizer({
+                          filename: `../../dist/stats/${name}.html`,
+                          open: false,
+                      }),
+                  ]
+                : []),
+        ],
     });
 
     const { output } = await bundle.write({
@@ -84,6 +135,8 @@ for (const [name, file] of Object.entries(otherInput)) {
         format: "iife",
         entryFileNames: `${name}.js`,
         name,
+        compact: true,
+        generatedCode: { arrowFunctions: true, constBindings: true },
     });
 
     await bundle.close();
@@ -95,8 +148,21 @@ for (const [name, file] of Object.entries(otherInput)) {
 
 const swBundle = await rollup({
     input: "./service/sw.ts",
-    treeshake: true,
-    plugins: swPlugins,
+    treeshake: {
+        propertyReadSideEffects: false,
+        unknownGlobalSideEffects: false,
+    },
+    plugins: [
+        ...swPlugins,
+        ...(useVisualizer
+            ? [
+                  visualizer({
+                      filename: "../../dist/stats/sw.html",
+                      open: false,
+                  }),
+              ]
+            : []),
+    ],
 });
 
 const { output: swOutput } = await swBundle.write({
@@ -105,6 +171,8 @@ const { output: swOutput } = await swBundle.write({
     entryFileNames: "sw.js",
     name: "sw",
     intro: "var document = { baseURI: self.location.origin };",
+    compact: true,
+    generatedCode: { arrowFunctions: true, constBindings: true },
 });
 
 await swBundle.close();

@@ -155,6 +155,7 @@ app.use((req, res, next) => {
 const { handler: ssrHandler } = await import("./.output/server/index.mjs");
 
 app.use(express.static(resolve(import.meta.dirname, ".output/public")));
+app.use(express.static(resolve(import.meta.dirname, ".output/public/_build")));
 app.use(express.static(resolve(import.meta.dirname, "dist")));
 
 const parser = new XMLParser({

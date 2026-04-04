@@ -2,7 +2,7 @@ import { createSignal, Show, For } from "solid-js";
 import searchBar from "~/lib/SearchBar";
 import SearchBarInput from "~/components/SearchBarInput";
 import { tabManager, resolveUrl } from "~/lib/TabManager";
-import "~/styles/SearchBar.css";
+import * as s from "~/styles/SearchBar.css";
 
 export default function SearchBar() {
     const bar = searchBar();
@@ -36,19 +36,19 @@ export default function SearchBar() {
     };
 
     return (
-        <div class="sb-host">
-            <div class="sb-root">
+        <div class={s.sbHost}>
+            <div class={s.sbRoot}>
                 <SearchBarInput
                     onSubmit={handleSubmit}
                     onSuggestions={setSuggestions}
                     showBlur={false}
                 />
                 <Show when={suggestions().length > 0}>
-                    <ul class="sb-dropdown">
+                    <ul class={s.sbDropdown}>
                         <For each={suggestions()}>
                             {item => (
                                 <li
-                                    class="sb-row"
+                                    class={s.sbRow}
                                     onClick={() => handleSubmit(item)}
                                 >
                                     {item}

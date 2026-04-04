@@ -8,270 +8,28 @@ import {
     batch,
 } from "solid-js";
 import { createStore, produce } from "solid-js/store";
+
 import {
     tabManager,
     type Tab,
-    resolveUrl,
     isNewtabUrl,
     isInternalUrl,
-    BROWSER_URLS,
 } from "~/lib/TabManager";
 import searchBar from "~/lib/SearchBar";
-
-import { BiRegularLeftArrowAlt, BiRegularRightArrowAlt } from "solid-icons/bi";
 import {
-    TbOutlineRefresh,
-    TbOutlineLock,
-    TbOutlineWorld,
-    TbOutlineArrowRight,
-    TbOutlinePlus,
-    TbOutlineX,
-} from "solid-icons/tb";
-import { CgSpinner } from "solid-icons/cg";
+    createTabHistory,
+    saveSession,
+    loadSession,
+} from "~/lib/browserHelpers";
+import { createIframeManager } from "~/lib/useIframeManager";
+import { createTabDrag } from "~/lib/useTabDrag";
 
-import "@catppuccin/palette/css/catppuccin.css";
-import "~/styles/BrowserChrome.css";
+import { TabPill } from "~/components/ui/TabPill";
+import { UrlBar } from "~/components/ui/UrlBar";
 
-function displayUrl(raw: string): string {
-    try {
-        const u = new URL(raw);
-        return u.hostname + u.pathname + u.search;
-    } catch {
-        return raw;
-    }
-}
+import { TbOutlinePlus, TbOutlineWorld } from "solid-icons/tb";
 
-function TabPill(props: {
-    tab: Tab;
-    active: boolean;
-    width: number;
-    isDragging: boolean;
-    onClose: (e: MouseEvent) => void;
-    onPointerDown: (e: PointerEvent) => void;
-}) {
-    return (
-        <div
-            class="tab"
-            classList={{
-                "tab--active": props.active,
-                "tab--dragging": props.isDragging,
-            }}
-            style={{ width: `${props.width}px` }}
-            onPointerDown={props.onPointerDown}
-        >
-            <Show when={props.tab.favicon}>
-                <img class="tab--favicon" src={props.tab.favicon} alt="" />
-            </Show>
-            <Show when={!props.tab.favicon}>
-                <span class="tab--icon">
-                    <Show
-                        when={props.tab.isLoading}
-                        fallback={<TbOutlineWorld size={13} />}
-                    >
-                        <CgSpinner size={13} class="spin" />
-                    </Show>
-                </span>
-            </Show>
-            <span class="tab--title">{props.tab.title}</span>
-            <button
-                class="tab--close"
-                title="Close tab"
-                onClick={e => {
-                    e.stopPropagation();
-                    props.onClose(e);
-                }}
-            >
-                <TbOutlineX size={12} />
-            </button>
-        </div>
-    );
-}
-
-const WS_URL = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/suggestions`;
-
-const isProbablyUrl = (v: string): boolean => {
-    try {
-        new URL(v);
-        return true;
-    } catch {}
-    return /^[\w-]+\.[a-z]{2,}/i.test(v);
-};
-
-function UrlBar(props: {
-    value: string;
-    canBack: boolean;
-    canForward: boolean;
-    isNewtab: boolean;
-    onNavigate: (url: string) => void;
-    onBack: () => void;
-    onForward: () => void;
-    onRefresh: () => void;
-}) {
-    const [editing, setEditing] = createSignal(false);
-    const [draft, setDraft] = createSignal("");
-    const [suggestions, setSuggestions] = createSignal<string[]>([]);
-    let ws: WebSocket | null = null;
-    let inputRef: HTMLInputElement | undefined;
-    let suppressBlur = false;
-
-    const openWs = () => {
-        if (ws && ws.readyState === WebSocket.OPEN) return;
-        ws = new WebSocket(WS_URL);
-        ws.onmessage = ev => {
-            try {
-                const { suggestions: s } = JSON.parse(ev.data);
-                if (Array.isArray(s)) setSuggestions(s);
-            } catch {}
-        };
-    };
-
-    const closeWs = () => {
-        ws?.close();
-        ws = null;
-    };
-
-    const display = () =>
-        editing() ? draft() : props.isNewtab ? "" : displayUrl(props.value);
-
-    const commit = (value = draft()) => {
-        const v = value.trim();
-        if (!v) {
-            setEditing(false);
-            setSuggestions([]);
-            return;
-        }
-        setSuggestions([]);
-        setEditing(false);
-        closeWs();
-        const resolved = resolveUrl(v);
-        props.onNavigate(resolved !== v ? resolved : v);
-    };
-
-    const handleInput = (v: string) => {
-        setDraft(v);
-        if (!v) {
-            setSuggestions([]);
-            return;
-        }
-        if (!isProbablyUrl(v)) {
-            openWs();
-            if (ws?.readyState === WebSocket.OPEN)
-                ws.send(JSON.stringify({ q: v }));
-        } else {
-            setSuggestions([]);
-        }
-    };
-
-    return (
-        <div class="urlbar">
-            <button
-                class="urlbar--nav-btn"
-                classList={{ "urlbar--nav-btn--dim": !props.canBack }}
-                title="Back"
-                disabled={!props.canBack}
-                onClick={props.onBack}
-            >
-                <BiRegularLeftArrowAlt size={17} />
-            </button>
-            <button
-                class="urlbar--nav-btn"
-                classList={{ "urlbar--nav-btn--dim": !props.canForward }}
-                title="Forward"
-                disabled={!props.canForward}
-                onClick={props.onForward}
-            >
-                <BiRegularRightArrowAlt size={17} />
-            </button>
-            <button
-                class="urlbar--nav-btn"
-                title="Reload"
-                onClick={props.onRefresh}
-            >
-                <TbOutlineRefresh size={17} />
-            </button>
-
-            <div class="urlbar--omnibox-wrap">
-                <div
-                    class="urlbar--omnibox"
-                    classList={{
-                        "urlbar--omnibox--focus":
-                            editing() || suggestions().length > 0,
-                    }}
-                >
-                    <Show when={!props.isNewtab && !editing()}>
-                        <span class="urlbar--lock">
-                            <TbOutlineLock size={12} />
-                        </span>
-                    </Show>
-                    <input
-                        ref={inputRef}
-                        class="urlbar--input"
-                        type="text"
-                        value={display()}
-                        placeholder={
-                            props.isNewtab || editing()
-                                ? "Search or enter address"
-                                : ""
-                        }
-                        onFocus={e => {
-                            setEditing(true);
-                            openWs();
-                            setDraft(props.isNewtab ? "" : props.value);
-                            e.target.select();
-                        }}
-                        onInput={e => handleInput(e.target.value)}
-                        onBlur={() => {
-                            if (suppressBlur) return;
-                            setEditing(false);
-                            setSuggestions([]);
-                            closeWs();
-                        }}
-                        onKeyDown={e => {
-                            if (e.key === "Enter") commit();
-                            if (e.key === "Escape") {
-                                setSuggestions([]);
-                                setEditing(false);
-                                inputRef?.blur();
-                            }
-                        }}
-                        spellcheck={false}
-                        autocomplete="off"
-                    />
-                    <button
-                        class="urlbar--go-btn"
-                        title="Go"
-                        onClick={() => commit()}
-                        onMouseDown={e => e.preventDefault()}
-                    >
-                        <TbOutlineArrowRight size={14} />
-                    </button>
-                </div>
-
-                <Show when={suggestions().length > 0}>
-                    <ul class="urlbar--suggestions">
-                        <For each={suggestions()}>
-                            {s => (
-                                <li
-                                    class="urlbar--suggestion-row"
-                                    onMouseDown={() => {
-                                        suppressBlur = true;
-                                    }}
-                                    onClick={() => {
-                                        suppressBlur = false;
-                                        commit(s);
-                                        inputRef?.blur();
-                                    }}
-                                >
-                                    {s}
-                                </li>
-                            )}
-                        </For>
-                    </ul>
-                </Show>
-            </div>
-        </div>
-    );
-}
+import * as s from "~/styles/BrowserChrome.css";
 
 export default function BrowserChrome() {
     const bar = searchBar();
@@ -282,54 +40,19 @@ export default function BrowserChrome() {
     const [draggingId, setDraggingId] = createSignal<string | null>(null);
     const [iframeIds, setIframeIds] = createSignal<string[]>([]);
 
-    const STORAGE_KEY = "browser-session";
-    const saveSession = () => {
-        try {
-            const tabs = tabStore.tabs.map(t => {
-                const browserKey = Object.entries(BROWSER_URLS).find(
-                    ([, v]) => v === t.url,
-                )?.[0];
-                return {
-                    url: browserKey ?? t.url,
-                    title: t.title,
-                    favicon: t.favicon,
-                };
-            });
-            const active = activeId();
-            const activeIndex = active
-                ? tabStore.tabs.findIndex(t => t.id === active)
-                : 0;
-            localStorage.setItem(
-                STORAGE_KEY,
-                JSON.stringify({ tabs, activeIndex }),
-            );
-        } catch {}
-    };
+    const { getHistory, pushHistory, canBack, canForward } = createTabHistory();
+    const { iframeMap, navigateIframe, navigate, registerIframe } =
+        createIframeManager(bar, pushHistory);
 
-    const iframeMap = new Map<string, HTMLIFrameElement>();
-    const historyMap = new Map<string, { stack: string[]; cursor: number }>();
+    let tabStripRef: HTMLDivElement | undefined;
+    let browserRootRef: HTMLDivElement | undefined;
 
-    const getHistory = (id: string) => {
-        if (!historyMap.has(id)) historyMap.set(id, { stack: [], cursor: -1 });
-        return historyMap.get(id)!;
-    };
-    const pushHistory = (id: string, url: string) => {
-        const h = getHistory(id);
-        h.stack = h.stack.slice(0, h.cursor + 1);
-        h.stack.push(url);
-        h.cursor = h.stack.length - 1;
-    };
-
-    const canBack = () => {
-        const id = activeId();
-        return id ? getHistory(id).cursor > 0 : false;
-    };
-    const canForward = () => {
-        const id = activeId();
-        if (!id) return false;
-        const h = getHistory(id);
-        return h.cursor < h.stack.length - 1;
-    };
+    const { startDrag } = createTabDrag({
+        getTabStripRef: () => tabStripRef,
+        getBrowserRootRef: () => browserRootRef,
+        getTabs: () => tabStore.tabs,
+        setDraggingId,
+    });
 
     const TAB_MIN = 60,
         TAB_MAX = 220,
@@ -342,31 +65,29 @@ export default function BrowserChrome() {
             Math.max(TAB_MIN, (tabBarWidth() - NEW_BTN_W - 8) / n),
         );
     });
+    const activeUrl = createMemo(
+        () => tabStore.tabs.find(t => t.id === activeId())?.url ?? "",
+    );
+    const activeTabIsNewtab = createMemo(() => isNewtabUrl(activeUrl()));
 
-    let tabStripRef: HTMLDivElement | undefined;
-    let browserRootRef: HTMLDivElement | undefined;
-    const ro = new ResizeObserver(entries => {
-        for (const e of entries) setTabBarWidth(e.contentRect.width);
-    });
+    const persist = () => saveSession(tabStore.tabs, activeId());
 
     tabManager.on("tabAdded", tab => {
         setTabStore("tabs", t => [...t, tab]);
         setIframeIds(ids => [...ids, tab.id]);
-        saveSession();
+        persist();
     });
     tabManager.on("tabRemoved", id =>
         batch(() => {
             setTabStore("tabs", t => t.filter(tab => tab.id !== id));
             setIframeIds(ids => ids.filter(i => i !== id));
             setActiveId(tabManager.activeId);
-            iframeMap.delete(id);
-            historyMap.delete(id);
-            saveSession();
+            persist();
         }),
     );
     tabManager.on("tabActivated", id => {
         setActiveId(id);
-        saveSession();
+        persist();
     });
     tabManager.on("tabUpdated", upd => {
         setTabStore(
@@ -379,7 +100,7 @@ export default function BrowserChrome() {
                 t.favicon = upd.favicon;
             }),
         );
-        saveSession();
+        persist();
     });
     tabManager.on("tabMoved", (id, toIndex) => {
         setTabStore(
@@ -391,222 +112,33 @@ export default function BrowserChrome() {
                 tabs.splice(toIndex, 0, tab);
             }),
         );
-        saveSession();
+        persist();
     });
 
-    const normalizeNav = (term: string): string => {
-        try {
-            new URL(term);
-            return term;
-        } catch {}
-        if (/^[\w-]+\.[a-z]{2,}/i.test(term)) return `https://${term}`;
-        return term;
-    };
-
-    const navigateIframe = (id: string, url: string) => {
-        const iframe = iframeMap.get(id);
-        if (!iframe) return;
-        pushHistory(id, url);
-        tabManager.updateTab(id, { url, isLoading: true, title: "Loading…" });
-
-        if (isInternalUrl(url)) {
-            iframe.src = url;
-        } else {
-            bar.emit("submit", iframe, normalizeNav(url));
-        }
-    };
-    const navigate = (id: string, url: string) =>
-        navigateIframe(id, resolveUrl(url));
-    const activeUrl = () =>
-        tabStore.tabs.find(t => t.id === activeId())?.url ?? "";
-    const activeTabIsNewtab = createMemo(() => isNewtabUrl(activeUrl()));
-
-    const registerIframe = (id: string, el: HTMLIFrameElement) => {
-        iframeMap.set(id, el);
-        el.addEventListener("load", () => {
-            let href: string | undefined;
-            try {
-                href = el.contentWindow?.location.href;
-            } catch {}
-            if (!href || href === "about:blank") return;
-            try {
-                const docTitle = el.contentDocument?.title;
-                const favicon =
-                    el.contentDocument?.querySelector<HTMLLinkElement>(
-                        'link[rel*="icon"]',
-                    )?.href;
-                tabManager.updateTab(id, {
-                    isLoading: false,
-                    title:
-                        docTitle ||
-                        displayUrl(
-                            tabManager.tabs.find(t => t.id === id)?.url ?? "",
-                        ) ||
-                        "Untitled",
-                    favicon,
-                });
-            } catch {
-                tabManager.updateTab(id, { isLoading: false });
-            }
-        });
-        const tab = tabManager.tabs.find(t => t.id === id);
-        if (tab?.url) {
-            pushHistory(id, tab.url);
-            if (isInternalUrl(tab.url)) {
-                el.src = tab.url;
-            } else {
-                bar.ready.then(() =>
-                    bar.emit("submit", el, normalizeNav(tab.url)),
-                );
-            }
-        }
-    };
-
-    const startDrag = (tabId: string, e: PointerEvent) => {
-        if (e.button !== 0) return;
-        if ((e.target as HTMLElement).closest(".tab--close")) return;
-
-        const strip = tabStripRef;
-        const root = browserRootRef;
-        if (!strip || !root) return;
-
-        const tabEl = e.currentTarget as HTMLElement;
-        const tabRect = tabEl.getBoundingClientRect();
-        const stripRect = strip.getBoundingClientRect();
-        const startX = e.clientX;
-        const startY = e.clientY;
-        const offsetX = e.clientX - tabRect.left;
-
-        const tabEls = Array.from(strip.querySelectorAll<HTMLElement>(".tab"));
-        const initialRects = tabEls.map(el => el.getBoundingClientRect());
-        const dragIdx = tabStore.tabs.findIndex(t => t.id === tabId);
-
-        const nonDragCenters: number[] = [];
-        for (let i = 0; i < initialRects.length; i++) {
-            if (i === dragIdx) continue;
-            nonDragCenters.push(
-                initialRects[i].left + initialRects[i].width / 2,
-            );
-        }
-
-        let clone: HTMLDivElement | null = null;
-        let dragging = false;
-        let currentTargetIdx = dragIdx;
-        const THRESHOLD = 3;
-
-        const applyShifts = (targetIdx: number) => {
-            const w = tabRect.width;
-            tabEls.forEach((el, i) => {
-                if (i === dragIdx) return;
-                let shift = 0;
-                if (targetIdx > dragIdx && i > dragIdx && i <= targetIdx) {
-                    shift = -w;
-                } else if (
-                    targetIdx < dragIdx &&
-                    i >= targetIdx &&
-                    i < dragIdx
-                ) {
-                    shift = w;
-                }
-                el.style.transition = "transform 0.15s ease";
-                el.style.transform = shift ? `translateX(${shift}px)` : "";
-            });
-        };
-
-        const onMove = (me: PointerEvent) => {
-            const dx = me.clientX - startX;
-            const dy = me.clientY - startY;
-            if (!dragging && Math.sqrt(dx * dx + dy * dy) < THRESHOLD) return;
-
-            if (!dragging) {
-                dragging = true;
-                setDraggingId(tabId);
-                tabManager.activateTab(tabId);
-                clone = tabEl.cloneNode(true) as HTMLDivElement;
-                clone.style.cssText = `position:fixed;top:${tabRect.top}px;left:${tabRect.left}px;width:${tabRect.width}px;height:${tabRect.height}px;margin:0;z-index:9999;pointer-events:none;transform-origin:center;`;
-                clone.classList.remove("tab--active", "tab--dragging");
-                clone.classList.add("tab--drag-clone");
-                root.appendChild(clone);
-            }
-
-            if (!clone) return;
-            const rawLeft = me.clientX - offsetX;
-            const clampedLeft = Math.max(
-                stripRect.left,
-                Math.min(stripRect.right - tabRect.width, rawLeft),
-            );
-            clone.style.transform = `translateX(${clampedLeft - tabRect.left}px) scale(1.02)`;
-
-            const centerX = clampedLeft + tabRect.width / 2;
-            let targetIdx = 0;
-            for (const mid of nonDragCenters) {
-                if (centerX > mid) targetIdx++;
-            }
-            if (targetIdx >= dragIdx) targetIdx++;
-
-            if (targetIdx !== currentTargetIdx) {
-                currentTargetIdx = targetIdx;
-                applyShifts(targetIdx);
-            }
-        };
-
-        const onUp = () => {
-            document.removeEventListener("pointermove", onMove);
-            document.removeEventListener("pointerup", onUp);
-            document.removeEventListener("pointercancel", onUp);
-
-            tabEls.forEach(el => {
-                el.style.transform = "";
-                el.style.transition = "";
-            });
-
-            if (clone) {
-                clone.remove();
-                clone = null;
-            }
-            if (dragging && currentTargetIdx !== dragIdx) {
-                tabManager.moveTab(tabId, currentTargetIdx);
-            }
-            if (!dragging) {
-                tabManager.activateTab(tabId);
-            }
-            setDraggingId(null);
-            dragging = false;
-        };
-
-        document.addEventListener("pointermove", onMove);
-        document.addEventListener("pointerup", onUp);
-        document.addEventListener("pointercancel", onUp);
-    };
+    const ro = new ResizeObserver(entries => {
+        for (const e of entries) setTabBarWidth(e.contentRect.width);
+    });
+    onCleanup(() => ro.disconnect());
 
     onMount(() => {
         if (tabStripRef) ro.observe(tabStripRef);
 
-        let restored = false;
-        try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) {
-                const session = JSON.parse(raw);
-                if (Array.isArray(session.tabs) && session.tabs.length > 0) {
-                    for (const saved of session.tabs) {
-                        const t = tabManager.createTab(saved.url);
-                        tabManager.updateTab(t.id, {
-                            title: saved.title || t.title,
-                            favicon: saved.favicon,
-                            isLoading: false,
-                        });
-                    }
-                    const idx = Math.min(
-                        Math.max(0, session.activeIndex ?? 0),
-                        tabManager.tabs.length - 1,
-                    );
-                    tabManager.activateTab(tabManager.tabs[idx].id);
-                    restored = true;
-                }
+        const session = loadSession();
+        if (session) {
+            for (const saved of session.tabs) {
+                const t = tabManager.createTab(saved.url);
+                tabManager.updateTab(t.id, {
+                    title: saved.title || t.title,
+                    favicon: saved.favicon,
+                    isLoading: false,
+                });
             }
-        } catch {}
-
-        if (!restored) {
+            const idx = Math.min(
+                Math.max(0, session.activeIndex ?? 0),
+                tabManager.tabs.length - 1,
+            );
+            tabManager.activateTab(tabManager.tabs[idx].id);
+        } else {
             const t = tabManager.createTab("browser:newtab");
             tabManager.activateTab(t.id);
         }
@@ -622,12 +154,11 @@ export default function BrowserChrome() {
             document.removeEventListener("browser:navigate", onBrowserNavigate),
         );
     });
-    onCleanup(() => ro.disconnect());
 
     return (
-        <div class="browser" ref={browserRootRef}>
-            <div class="browser--chrome">
-                <div class="browser--tabstrip" ref={tabStripRef}>
+        <div class={s.browser} ref={browserRootRef}>
+            <div class={s.browserChrome}>
+                <div class={s.browserTabstrip} ref={tabStripRef}>
                     <For each={tabStore.tabs}>
                         {tab => (
                             <TabPill
@@ -641,7 +172,7 @@ export default function BrowserChrome() {
                         )}
                     </For>
                     <button
-                        class="tab-new"
+                        class={s.tabNew}
                         title="New tab"
                         onClick={() => {
                             const t = tabManager.createTab("browser:newtab");
@@ -654,8 +185,8 @@ export default function BrowserChrome() {
 
                 <UrlBar
                     value={activeUrl()}
-                    canBack={canBack()}
-                    canForward={canForward()}
+                    canBack={canBack(activeId())}
+                    canForward={canForward(activeId())}
                     isNewtab={activeTabIsNewtab()}
                     onNavigate={url => {
                         const id = activeId();
@@ -696,22 +227,22 @@ export default function BrowserChrome() {
                 />
             </div>
 
-            <div class="browser--viewport">
+            <div class={s.browserViewport}>
                 <For each={iframeIds()}>
                     {id => (
                         <iframe
                             title="Proxied browser-in-browser webpage"
-                            class="browser--frame"
+                            class={s.browserFrame}
                             classList={{
-                                "browser--frame--active": id === activeId(),
+                                [s.browserFrameActive]: id === activeId(),
                             }}
                             ref={el => registerIframe(id, el)}
                         />
                     )}
                 </For>
                 <Show when={tabStore.tabs.length === 0}>
-                    <div class="browser--empty">
-                        <TbOutlineWorld size={40} class="browser--empty-icon" />
+                    <div class={s.browserEmpty}>
+                        <TbOutlineWorld size={40} class={s.browserEmptyIcon} />
                         <p>No tabs open</p>
                         <button
                             onClick={() => {

@@ -1,10 +1,6 @@
 import { createSignal, onMount, onCleanup } from "solid-js";
-import "@catppuccin/palette/css/catppuccin.css";
-import "@fontsource/rubik/400.css";
-import "@fontsource/rubik/500.css";
-import cx from "classix";
-import "~/styles/LoadingAnimation.css";
 import { DotLottie } from "@lottiefiles/dotlottie-web";
+import * as s from "~/styles/LoadingAnimation.css";
 
 interface LoadingAnimationProps {
     iframed?: boolean;
@@ -50,7 +46,6 @@ export default function LoadingAnimation({ iframed }: LoadingAnimationProps) {
             canvas: document.createElement("canvas"),
             src: "/assets/civil-loading.lottie",
         });
-
         containerRef.appendChild(anim.canvas as Node);
 
         let aborted = false;
@@ -65,7 +60,6 @@ export default function LoadingAnimation({ iframed }: LoadingAnimationProps) {
                 timeout = setTimeout(cycle, DISPLAY_DURATION + FADE_DURATION);
             }, FADE_DURATION);
         };
-
         timeout = setTimeout(cycle, DISPLAY_DURATION);
 
         onCleanup(() => {
@@ -76,11 +70,15 @@ export default function LoadingAnimation({ iframed }: LoadingAnimationProps) {
     });
 
     return (
-        <div class={cx("loading-container", iframed && "iframed")}>
-            <div class="loading-lottie" ref={containerRef} />
-            <div class="loading-status-wrapper">
+        <div class={s.loadingContainer}>
+            <div class={s.loadingLottie} ref={containerRef} />
+            <div class={s.loadingStatusWrapper}>
                 <span
-                    class={cx("loading-status", visible() ? "shown" : "hidden")}
+                    class={s.loadingStatus}
+                    classList={{
+                        [s.loadingStatusShown]: visible(),
+                        [s.loadingStatusHidden]: !visible(),
+                    }}
                 >
                     {statuses[currentIndex()]}
                 </span>

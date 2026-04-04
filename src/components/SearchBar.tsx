@@ -1,7 +1,7 @@
 import { createSignal, createEffect, Show, For } from "solid-js";
 import searchBar from "~/lib/SearchBar";
 import SearchBarInput from "~/components/SearchBarInput.tsx";
-import "~/styles/SearchBar.css";
+import * as s from "~/styles/SearchBar.css";
 
 export default function SearchBar() {
     const bar = searchBar();
@@ -13,7 +13,6 @@ export default function SearchBar() {
 
     let iframeRef: HTMLIFrameElement | undefined;
     let hostRef: HTMLDivElement | undefined;
-    let rootRef: HTMLDivElement | undefined;
 
     const showIframe = () => hasSubmitted() && iframeUrl() !== "";
 
@@ -25,16 +24,12 @@ export default function SearchBar() {
     const handleSubmit = (value: string) => {
         bar.lastUrlSearched = value;
         bar.url = value;
-
         localStorage.setItem("last-url-searched", value);
         localStorage.setItem("url", value);
-
         setSuggestions([]);
         setHasSubmitted(true);
         setIframeUrl(value);
-
         setTimeout(() => setIframeVisible(true), 60);
-
         setTimeout(() => {
             if (!iframeRef) return;
             bar.emit("submit", iframeRef, value);
@@ -42,12 +37,8 @@ export default function SearchBar() {
     };
 
     return (
-        <div ref={hostRef} class="sb-host">
-            <div
-                ref={rootRef}
-                class="sb-root"
-                classList={{ "sb-root--expanded": showIframe() }}
-            >
+        <div ref={hostRef} class={s.sbHost}>
+            <div class={s.sbRoot}>
                 <SearchBarInput
                     onSubmit={handleSubmit}
                     onSuggestions={setSuggestions}
@@ -56,13 +47,13 @@ export default function SearchBar() {
 
                 <Show when={suggestions().length > 0}>
                     <ul
-                        class="sb-dropdown"
-                        classList={{ "sb-dropdown--blur": showIframe() }}
+                        class={s.sbDropdown}
+                        classList={{ [s.sbDropdownBlur]: showIframe() }}
                     >
                         <For each={suggestions()}>
                             {item => (
                                 <li
-                                    class="sb-row"
+                                    class={s.sbRow}
                                     onClick={() => handleSubmit(item)}
                                 >
                                     {item}

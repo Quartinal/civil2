@@ -1,5 +1,3 @@
-///<reference types="serviceworker" />
-
 import type { UVConfig } from "@titaniumnetwork-dev/ultraviolet";
 import type { ScramjetController } from "@mercuryworkshop/scramjet";
 import { init, encode, decode } from "$config/shared/wasmDencode";
