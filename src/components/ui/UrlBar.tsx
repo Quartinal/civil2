@@ -1,14 +1,13 @@
-import { createSignal, For, Show } from "solid-js";
-import { resolveUrl } from "~/lib/TabManager";
-import { WS_URL, isProbablyUrl, displayUrl } from "~/lib/browserHelpers";
-import * as s from "~/styles/BrowserChrome.css";
-
 import { BiRegularLeftArrowAlt, BiRegularRightArrowAlt } from "solid-icons/bi";
 import {
-    TbOutlineRefresh,
-    TbOutlineLock,
     TbOutlineArrowRight,
+    TbOutlineLock,
+    TbOutlineRefresh,
 } from "solid-icons/tb";
+import { createSignal, For, Show } from "solid-js";
+import { displayUrl, isProbablyUrl, WS_URL } from "~/lib/browserHelpers";
+import { resolveUrl } from "~/lib/TabManager";
+import * as s from "~/styles/BrowserChrome.css";
 
 interface UrlBarProps {
     value: string;
@@ -80,6 +79,7 @@ export function UrlBar(props: UrlBarProps) {
     return (
         <div class={s.urlbar}>
             <button
+                type="button"
                 class={s.urlbarNavBtn}
                 classList={{ [s.urlbarNavBtnDim]: !props.canBack }}
                 title="Back"
@@ -89,6 +89,7 @@ export function UrlBar(props: UrlBarProps) {
                 <BiRegularLeftArrowAlt size={17} />
             </button>
             <button
+                type="button"
                 class={s.urlbarNavBtn}
                 classList={{ [s.urlbarNavBtnDim]: !props.canForward }}
                 title="Forward"
@@ -98,6 +99,7 @@ export function UrlBar(props: UrlBarProps) {
                 <BiRegularRightArrowAlt size={17} />
             </button>
             <button
+                type="button"
                 class={s.urlbarNavBtn}
                 title="Reload"
                 onClick={props.onRefresh}
@@ -153,6 +155,7 @@ export function UrlBar(props: UrlBarProps) {
                         autocomplete="off"
                     />
                     <button
+                        type="button"
                         class={s.urlbarGoBtn}
                         title="Go"
                         onClick={() => commit()}
@@ -175,6 +178,13 @@ export function UrlBar(props: UrlBarProps) {
                                         suppressBlur = false;
                                         commit(suggestion);
                                         inputRef?.blur();
+                                    }}
+                                    onKeyDown={e => {
+                                        if (e.key === "Enter") {
+                                            suppressBlur = false;
+                                            commit(suggestion);
+                                            inputRef?.blur();
+                                        }
                                     }}
                                 >
                                     {suggestion}

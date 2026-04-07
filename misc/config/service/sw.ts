@@ -1,7 +1,7 @@
-import type { UVConfig } from "@titaniumnetwork-dev/ultraviolet";
 import type { ScramjetController } from "@mercuryworkshop/scramjet";
-import { init, encode, decode } from "$config/shared/wasmDencode";
+import type { UVConfig } from "@titaniumnetwork-dev/ultraviolet";
 import genProxyPath from "$config/shared/genProxyPath";
+import { decode, encode, init } from "$config/shared/wasmDencode";
 
 declare global {
     interface Window {

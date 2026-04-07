@@ -1,5 +1,5 @@
-import { init, setSearchEngine } from "$config/shared/wasmDencode";
 import genProxyPath from "$config/shared/genProxyPath";
+import { init, setSearchEngine } from "$config/shared/wasmDencode";
 
 const { ScramjetController } = $scramjetLoadController();
 const proxyPath = genProxyPath("/", "scramjet");

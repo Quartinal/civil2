@@ -1,6 +1,6 @@
-import { Show } from "solid-js";
-import { TbOutlineWorld, TbOutlineX } from "solid-icons/tb";
 import { CgSpinner } from "solid-icons/cg";
+import { TbOutlineWorld, TbOutlineX } from "solid-icons/tb";
+import { Show } from "solid-js";
 import type { Tab } from "~/lib/TabManager";
 import * as s from "~/styles/BrowserChrome.css";
 
@@ -39,6 +39,7 @@ export function TabPill(props: TabPillProps) {
             </Show>
             <span class={s.tabTitle}>{props.tab.title}</span>
             <button
+                type="button"
                 class={s.tabClose}
                 title="Close tab"
                 onClick={e => {

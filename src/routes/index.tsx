@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/solid-router";
-import { createSignal, onMount, onCleanup, Show } from "solid-js";
-import LoadingAnimation from "~/components/LoadingAnimation";
 import { clientOnly } from "@solidjs/start";
+import { createFileRoute } from "@tanstack/solid-router";
+import { createSignal, onCleanup, onMount, Show } from "solid-js";
+import LoadingAnimation from "~/components/LoadingAnimation";
 
 const Browser = clientOnly(() => import("~/components/BrowserChrome.tsx"));
 

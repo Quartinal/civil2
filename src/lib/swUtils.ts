@@ -27,7 +27,7 @@ async function registerSw() {
 async function unregisterSw() {
     if ("serviceWorker" in navigator) {
         await navigator.serviceWorker.getRegistrations().then(registrations => {
-            registrations.forEach(registration => registration.unregister());
+            for (const registration of registrations) registration.unregister();
         });
     }
 }
@@ -73,4 +73,4 @@ async function setupBareMux() {
     }
 }
 
-export { registerSw, unregisterSw, setupBareMux };
+export { registerSw, setupBareMux, unregisterSw };

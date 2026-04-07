@@ -1,33 +1,30 @@
+import { TbOutlinePlus, TbOutlineWorld } from "solid-icons/tb";
 import {
-    createSignal,
-    createMemo,
-    For,
-    Show,
-    onMount,
-    onCleanup,
     batch,
+    createMemo,
+    createSignal,
+    For,
+    onCleanup,
+    onMount,
+    Show,
 } from "solid-js";
 import { createStore, produce } from "solid-js/store";
-
-import {
-    tabManager,
-    type Tab,
-    isNewtabUrl,
-    isInternalUrl,
-} from "~/lib/TabManager";
-import searchBar from "~/lib/SearchBar";
-import {
-    createTabHistory,
-    saveSession,
-    loadSession,
-} from "~/lib/browserHelpers";
-import { createIframeManager } from "~/lib/useIframeManager";
-import { createTabDrag } from "~/lib/useTabDrag";
-
 import { TabPill } from "~/components/ui/TabPill";
 import { UrlBar } from "~/components/ui/UrlBar";
-
-import { TbOutlinePlus, TbOutlineWorld } from "solid-icons/tb";
+import {
+    createTabHistory,
+    loadSession,
+    saveSession,
+} from "~/lib/browserHelpers";
+import searchBar from "~/lib/SearchBar";
+import {
+    isInternalUrl,
+    isNewtabUrl,
+    type Tab,
+    tabManager,
+} from "~/lib/TabManager";
+import { createIframeManager } from "~/lib/useIframeManager";
+import { createTabDrag } from "~/lib/useTabDrag";
 
 import * as s from "~/styles/BrowserChrome.css";
 
@@ -172,6 +169,7 @@ export default function BrowserChrome() {
                         )}
                     </For>
                     <button
+                        type="button"
                         class={s.tabNew}
                         title="New tab"
                         onClick={() => {
@@ -245,6 +243,7 @@ export default function BrowserChrome() {
                         <TbOutlineWorld size={40} class={s.browserEmptyIcon} />
                         <p>No tabs open</p>
                         <button
+                            type="button"
                             onClick={() => {
                                 const t =
                                     tabManager.createTab("browser:newtab");

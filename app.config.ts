@@ -1,13 +1,14 @@
+import terser from "@rollup/plugin-terser";
 import { defineConfig } from "@solidjs/start/config";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import tsconfigPaths from "vite-tsconfig-paths";
-import { sitemapPlugin as sitemap } from "vite-plugin-sitemap-from-routes";
-import { robots, BLOCK_AI_ALLOW_REST } from "vite-plugin-robots-ts";
 import { vanillaExtractPlugin as vanillaExtract } from "@vanilla-extract/vite-plugin";
-import { browserslistToTargets } from "lightningcss";
 import browserslist from "browserslist";
-import terser from "@rollup/plugin-terser";
+import { browserslistToTargets } from "lightningcss";
 import nodePolyfills from "rollup-plugin-polyfill-node";
+import biome from "vite-plugin-biome";
+import { BLOCK_AI_ALLOW_REST, robots } from "vite-plugin-robots-ts";
+import { sitemapPlugin as sitemap } from "vite-plugin-sitemap-from-routes";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 const cssTargets = browserslistToTargets(
     browserslist("last 2 years, > 0.5%, not dead"),
@@ -80,6 +81,13 @@ export default defineConfig({
             tanstackRouter({ target: "solid" }),
             tsconfigPaths(),
             vanillaExtract(),
+            biome({
+                mode: "check",
+                files: ".",
+                applyFixes: true,
+                failOnError: true,
+                unsafe: false,
+            }),
             sitemap({
                 baseUrl: "https://civil.quartinal.me",
                 routesFile: "src/routeTree.gen.ts",

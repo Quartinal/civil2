@@ -1,5 +1,5 @@
-import xorDencode from "$wasm/xor_encoder.js";
 import type { MainModule } from "$wasm/xor_encoder.js";
+import xorDencode from "$wasm/xor_encoder.js";
 
 let module: MainModule;
 let initPromise: Promise<void> | null = null;
@@ -12,7 +12,6 @@ export function init() {
     console.debug("[xorWasm] init start");
     initPromise = xorDencode().then((mod: any) => {
         module = mod;
-        // biome-ignore lint/complexity/useLiteralKeys
         (globalThis as any)["__civil_xorWasm__"] = {
             mod: module,
             scratch: new Uint8Array(4096),

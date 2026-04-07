@@ -1,5 +1,5 @@
-import { createSignal, onMount, onCleanup } from "solid-js";
 import { DotLottie } from "@lottiefiles/dotlottie-web";
+import { createSignal, onCleanup, onMount } from "solid-js";
 import * as s from "~/styles/LoadingAnimation.css";
 
 interface LoadingAnimationProps {

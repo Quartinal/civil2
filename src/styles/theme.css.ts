@@ -1,5 +1,5 @@
-import { createGlobalThemeContract } from "@vanilla-extract/css";
 import { flavors } from "@catppuccin/palette";
+import { createGlobalThemeContract } from "@vanilla-extract/css";
 
 const { colors } = flavors.macchiato;
 

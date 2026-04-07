@@ -1,6 +1,6 @@
-import { createSignal, createEffect, Show, For } from "solid-js";
-import searchBar from "~/lib/SearchBar";
+import { createEffect, createSignal, For, Show } from "solid-js";
 import SearchBarInput from "~/components/SearchBarInput.tsx";
+import searchBar from "~/lib/SearchBar";
 import * as s from "~/styles/SearchBar.css";
 
 export default function SearchBar() {
@@ -55,6 +55,9 @@ export default function SearchBar() {
                                 <li
                                     class={s.sbRow}
                                     onClick={() => handleSubmit(item)}
+                                    onKeyDown={e =>
+                                        e.key === "Enter" && handleSubmit(item)
+                                    }
                                 >
                                     {item}
                                 </li>
@@ -66,6 +69,7 @@ export default function SearchBar() {
                 <Show when={showIframe()}>
                     <iframe
                         ref={iframeRef}
+                        title="Search suggestions"
                         class="sb-frame"
                         classList={{ "sb-frame--visible": iframeVisible() }}
                     />

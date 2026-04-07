@@ -1,32 +1,32 @@
-import {
-    createSignal,
-    createMemo,
-    For,
-    Show,
-    onMount,
-    onCleanup,
-    batch,
-} from "solid-js";
-import { createStore, produce } from "solid-js/store";
-import {
-    tabManager,
-    type Tab,
-    resolveUrl,
-    isNewtabUrl,
-    isInternalUrl,
-    BROWSER_URLS,
-} from "#lib/TabManager";
-import searchBar from "#lib/SearchBar";
 import { BiRegularLeftArrowAlt, BiRegularRightArrowAlt } from "solid-icons/bi";
+import { CgSpinner } from "solid-icons/cg";
 import {
-    TbOutlineRefresh,
-    TbOutlineLock,
-    TbOutlineWorld,
     TbOutlineArrowRight,
+    TbOutlineLock,
     TbOutlinePlus,
+    TbOutlineRefresh,
+    TbOutlineWorld,
     TbOutlineX,
 } from "solid-icons/tb";
-import { CgSpinner } from "solid-icons/cg";
+import {
+    batch,
+    createMemo,
+    createSignal,
+    For,
+    onCleanup,
+    onMount,
+    Show,
+} from "solid-js";
+import { createStore, produce } from "solid-js/store";
+import searchBar from "#lib/SearchBar";
+import {
+    BROWSER_URLS,
+    isInternalUrl,
+    isNewtabUrl,
+    resolveUrl,
+    type Tab,
+    tabManager,
+} from "#lib/TabManager";
 
 import "@catppuccin/palette/css/catppuccin.css";
 import "#styles/BrowserChrome.css";

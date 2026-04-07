@@ -1,11 +1,11 @@
 import type { UVConfig } from "@titaniumnetwork-dev/ultraviolet";
+import genProxyPath from "$config/shared/genProxyPath";
 import {
-    init,
-    encode,
     decode,
+    encode,
+    init,
     setSearchEngine,
 } from "$config/shared/wasmDencode";
-import genProxyPath from "$config/shared/genProxyPath";
 
 const spf = genProxyPath("/", "uv");
 

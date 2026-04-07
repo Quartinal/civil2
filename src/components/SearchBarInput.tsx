@@ -1,6 +1,6 @@
-import { createSignal, onMount, onCleanup } from "solid-js";
-import genBCKey from "~/lib/genBCKey";
+import { createSignal, onCleanup, onMount } from "solid-js";
 import { WS_URL } from "~/lib/browserHelpers";
+import genBCKey from "~/lib/genBCKey";
 import * as s from "~/styles/SearchBar.css";
 
 const isProbablyUrl = (value: string) => {
@@ -86,7 +86,11 @@ export default function SearchBarInput(props: Props) {
                 autocomplete="off"
                 data-enable-grammarly="false"
             />
-            <button class={s.sbButton} onClick={() => handleSubmit()}>
+            <button
+                type="button"
+                class={s.sbButton}
+                onClick={() => handleSubmit()}
+            >
                 Unblock
             </button>
         </div>

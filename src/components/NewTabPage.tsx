@@ -1,6 +1,6 @@
-import SearchBarContainer from "./SearchBarContainer";
 import { Show } from "solid-js";
 import * as s from "~/styles/NewTabPage.css";
+import SearchBarContainer from "./SearchBarContainer";
 
 export default function NewTabPage() {
     return (

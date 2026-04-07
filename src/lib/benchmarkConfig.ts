@@ -1,15 +1,15 @@
-import { use, graphic } from "echarts/core";
+import type { ColorName } from "@catppuccin/palette";
+import { flavors } from "@catppuccin/palette";
+import type { EChartsOption } from "echarts";
 import { BarChart } from "echarts/charts";
 import {
-    TitleComponent,
-    TooltipComponent,
     GridComponent,
     MarkLineComponent,
+    TitleComponent,
+    TooltipComponent,
 } from "echarts/components";
+import { graphic, use } from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
-import { flavors } from "@catppuccin/palette";
-import type { ColorName } from "@catppuccin/palette";
-import type { EChartsOption } from "echarts";
 
 use([
     BarChart,

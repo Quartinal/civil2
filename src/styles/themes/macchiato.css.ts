@@ -1,5 +1,5 @@
-import { createGlobalTheme } from "@vanilla-extract/css";
 import { flavors } from "@catppuccin/palette";
+import { createGlobalTheme } from "@vanilla-extract/css";
 import { vars } from "../theme.css";
 
 const { colors } = flavors.macchiato;

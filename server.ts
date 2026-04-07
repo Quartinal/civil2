@@ -1,12 +1,11 @@
-import express from "express";
-import compression from "compression";
+import { existsSync } from "node:fs";
+import { createServer } from "node:http";
 
 import { resolve } from "node:path";
-import { createServer } from "node:http";
-import { existsSync } from "node:fs";
-
-import { uvPath } from "@titaniumnetwork-dev/ultraviolet";
 import { scramjetPath } from "@mercuryworkshop/scramjet/path";
+import { uvPath } from "@titaniumnetwork-dev/ultraviolet";
+import compression from "compression";
+import express from "express";
 
 // @ts-expect-error bro untyped module smh
 import createRammerhead from "rammerhead";
@@ -30,23 +29,19 @@ const { epoxyPath, libcurlPath, baremodulePath } = {
     ),
 };
 
-import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
-
-// @ts-expect-error bro untyped module smh
-import { logging, server as wisp } from "@mercuryworkshop/wisp-js/server";
-import { createBareServer } from "@tomphttp/bare-server-node";
-
-import { WebSocketServer } from "ws";
-
-import xior from "xior";
-import { XMLParser } from "fast-xml-parser";
-
 import type {
     IncomingMessage as Request,
     ServerResponse as Response,
     Server,
 } from "node:http";
 import type { Socket } from "node:net";
+import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
+// @ts-expect-error bro untyped module smh
+import { logging, server as wisp } from "@mercuryworkshop/wisp-js/server";
+import { createBareServer } from "@tomphttp/bare-server-node";
+import { XMLParser } from "fast-xml-parser";
+import { WebSocketServer } from "ws";
+import xior from "xior";
 
 import packageJson from "./package.json" with { type: "json" };
 

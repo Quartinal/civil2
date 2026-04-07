@@ -1,4 +1,4 @@
-import { style, globalStyle, keyframes } from "@vanilla-extract/css";
+import { globalStyle, keyframes, style } from "@vanilla-extract/css";
 import { vars } from "./theme.css";
 
 const T_FAST = "0.1s ease";

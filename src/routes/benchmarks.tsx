@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/solid-router";
 import { clientOnly } from "@solidjs/start";
+import { createFileRoute } from "@tanstack/solid-router";
 import results from "$tests/bench_results.json" with { type: "json" };
 
 const BenchmarkChart = clientOnly(
@@ -12,10 +12,8 @@ export const Route = createFileRoute("/benchmarks")({
 
 function RouteComponent() {
     return (
-        <>
-            <main>
-                <BenchmarkChart data={results} />
-            </main>
-        </>
+        <main>
+            <BenchmarkChart data={results} />
+        </main>
     );
 }

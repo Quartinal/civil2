@@ -1,9 +1,9 @@
-import { build } from "esbuild";
-import server from "esbuild-server";
-import { solidPlugin as solid } from "esbuild-plugin-solid";
-import { rimraf } from "rimraf";
-import { writeFile, cp } from "node:fs/promises";
+import { cp, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { build } from "esbuild";
+import { solidPlugin as solid } from "esbuild-plugin-solid";
+import server from "esbuild-server";
+import { rimraf } from "rimraf";
 import { name } from "./package.json" with { type: "json" };
 
 await rimraf("dist");

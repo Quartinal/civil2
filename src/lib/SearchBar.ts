@@ -1,8 +1,8 @@
+import type * as _BareMux from "@mercuryworkshop/bare-mux";
+import type { ScramjetController } from "@mercuryworkshop/scramjet";
+import type { UVConfig } from "@titaniumnetwork-dev/ultraviolet";
 import { EventEmitter } from "tseep";
 import { registerSw, setupBareMux } from "./swUtils";
-import type { UVConfig } from "@titaniumnetwork-dev/ultraviolet";
-import type { ScramjetController } from "@mercuryworkshop/scramjet";
-import type * as _BareMux from "@mercuryworkshop/bare-mux";
 
 interface ProxyEntry {
     name: "uv" | "scramjet";

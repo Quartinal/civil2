@@ -1,7 +1,7 @@
-import { tabManager, isInternalUrl, resolveUrl } from "~/lib/TabManager";
-import { trackVisit } from "~/lib/db";
 import { displayUrl, normalizeNav } from "~/lib/browserHelpers";
+import { trackVisit } from "~/lib/db";
 import type searchBar from "~/lib/SearchBar";
+import { isInternalUrl, resolveUrl, tabManager } from "~/lib/TabManager";
 
 type BarInstance = ReturnType<typeof searchBar>;
 

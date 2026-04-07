@@ -1,15 +1,15 @@
-import { rollup } from "rollup";
-import { basename } from "node:path";
-import { createColors } from "picocolors";
-import { createRequire } from "node:module";
-import { rimraf } from "rimraf";
 import { copyFile } from "node:fs/promises";
-import typescript from "rollup-plugin-typescript2";
-import nodeResolve from "@rollup/plugin-node-resolve";
-import commonjs from "@rollup/plugin-commonjs";
-import nodePolyfills from "rollup-plugin-polyfill-node";
-import terser from "@rollup/plugin-terser";
+import { createRequire } from "node:module";
+import { basename } from "node:path";
 import alias from "@rollup/plugin-alias";
+import commonjs from "@rollup/plugin-commonjs";
+import nodeResolve from "@rollup/plugin-node-resolve";
+import terser from "@rollup/plugin-terser";
+import { createColors } from "picocolors";
+import { rimraf } from "rimraf";
+import { rollup } from "rollup";
+import nodePolyfills from "rollup-plugin-polyfill-node";
+import typescript from "rollup-plugin-typescript2";
 import { visualizer } from "rollup-plugin-visualizer";
 
 const require = createRequire(import.meta.url);

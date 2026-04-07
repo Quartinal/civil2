@@ -1,11 +1,11 @@
-import { tabManager } from "~/lib/TabManager";
 import type { Tab } from "~/lib/TabManager";
+import { tabManager } from "~/lib/TabManager";
 import {
-    tab as tabClass,
     tabActive,
-    tabDragging,
-    tabDragClone,
+    tab as tabClass,
     tabClose,
+    tabDragClone,
+    tabDragging,
 } from "~/styles/BrowserChrome.css";
 
 interface TabDragOptions {

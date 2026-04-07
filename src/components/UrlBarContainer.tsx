@@ -1,7 +1,7 @@
-import { createSignal, Show, For } from "solid-js";
-import searchBar from "~/lib/SearchBar";
+import { createSignal, For, Show } from "solid-js";
 import SearchBarInput from "~/components/SearchBarInput";
-import { tabManager, resolveUrl } from "~/lib/TabManager";
+import searchBar from "~/lib/SearchBar";
+import { resolveUrl, tabManager } from "~/lib/TabManager";
 import * as s from "~/styles/SearchBar.css";
 
 export default function SearchBar() {
@@ -50,6 +50,9 @@ export default function SearchBar() {
                                 <li
                                     class={s.sbRow}
                                     onClick={() => handleSubmit(item)}
+                                    onKeyDown={e =>
+                                        e.key === "Enter" && handleSubmit(item)
+                                    }
                                 >
                                     {item}
                                 </li>

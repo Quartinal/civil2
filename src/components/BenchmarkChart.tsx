@@ -1,31 +1,31 @@
-import {
-    onMount,
-    onCleanup,
-    createMemo,
-    createEffect,
-    Show,
-    For,
-} from "solid-js";
 import { init } from "echarts/core";
+import {
+    createEffect,
+    createMemo,
+    For,
+    onCleanup,
+    onMount,
+    Show,
+} from "solid-js";
 
 import {
-    colors,
-    getImplMeta,
     axisBase,
-    gridBase,
-    tooltipBase,
-    titleBase,
-    gradient,
+    type BenchmarkData,
     barSeries,
-    styles,
+    colors,
+    dotStyle,
+    type EChartsOption,
+    getImplMeta,
+    gradient,
+    gridBase,
     heroCardStyle,
     heroNumberStyle,
-    pillStyle,
-    dotStyle,
     implTagStyle,
+    pillStyle,
+    styles,
     tableCellStyle,
-    type BenchmarkData,
-    type EChartsOption,
+    titleBase,
+    tooltipBase,
 } from "~/lib/benchmarkConfig";
 
 interface BenchmarkChartProps {
@@ -267,12 +267,15 @@ export default function BenchmarkChart(props: BenchmarkChartProps) {
         const charts = [cThroughput, cLatency, cSpeedup].filter(
             Boolean,
         ) as NonNullable<typeof cThroughput>[];
-        const ro = new ResizeObserver(() => charts.forEach(c => c.resize()));
-        [refThroughput, refLatency, refSpeedup].forEach(el => ro.observe(el));
+        const ro = new ResizeObserver(() => {
+            for (const c of charts) c.resize();
+        });
+        for (const el of [refThroughput, refLatency, refSpeedup])
+            ro.observe(el);
 
         onCleanup(() => {
             ro.disconnect();
-            charts.forEach(c => c.dispose());
+            for (const c of charts) c.dispose();
         });
     });
 

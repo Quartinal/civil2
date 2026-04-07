@@ -14,6 +14,7 @@
             "tests/**",
             "scripts/**",
             "misc/**",
+            "!misc/apps/anura",
             "server.ts",
             "tsconfig.json",
             "app.config.ts"
@@ -33,7 +34,8 @@
                 "noExplicitAny": "off"
             },
             "complexity": {
-                "noStaticOnlyClass": "off"
+                "noStaticOnlyClass": "off",
+                "useLiteralKeys": "off"
             }
         }
     },
