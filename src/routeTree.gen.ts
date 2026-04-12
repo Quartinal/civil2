@@ -10,15 +10,34 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as NewtabRouteImport } from './routes/newtab'
+import { Route as HistoryRouteImport } from './routes/history'
+import { Route as ExtensionsRouteImport } from './routes/extensions'
+import { Route as BookmarksRouteImport } from './routes/bookmarks'
 import { Route as BenchmarksRouteImport } from './routes/benchmarks'
 import { Route as BaninfoRouteImport } from './routes/baninfo'
 import { Route as BanRouteImport } from './routes/ban'
+import { Route as AppsRouteImport } from './routes/apps'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 
 const NewtabRoute = NewtabRouteImport.update({
   id: '/newtab',
   path: '/newtab',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoryRoute = HistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExtensionsRoute = ExtensionsRouteImport.update({
+  id: '/extensions',
+  path: '/extensions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookmarksRoute = BookmarksRouteImport.update({
+  id: '/bookmarks',
+  path: '/bookmarks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BenchmarksRoute = BenchmarksRouteImport.update({
@@ -36,6 +55,11 @@ const BanRoute = BanRouteImport.update({
   path: '/ban',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppsRoute = AppsRouteImport.update({
+  id: '/apps',
+  path: '/apps',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
@@ -50,49 +74,89 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/apps': typeof AppsRoute
   '/ban': typeof BanRoute
   '/baninfo': typeof BaninfoRoute
   '/benchmarks': typeof BenchmarksRoute
+  '/bookmarks': typeof BookmarksRoute
+  '/extensions': typeof ExtensionsRoute
+  '/history': typeof HistoryRoute
   '/newtab': typeof NewtabRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/apps': typeof AppsRoute
   '/ban': typeof BanRoute
   '/baninfo': typeof BaninfoRoute
   '/benchmarks': typeof BenchmarksRoute
+  '/bookmarks': typeof BookmarksRoute
+  '/extensions': typeof ExtensionsRoute
+  '/history': typeof HistoryRoute
   '/newtab': typeof NewtabRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/apps': typeof AppsRoute
   '/ban': typeof BanRoute
   '/baninfo': typeof BaninfoRoute
   '/benchmarks': typeof BenchmarksRoute
+  '/bookmarks': typeof BookmarksRoute
+  '/extensions': typeof ExtensionsRoute
+  '/history': typeof HistoryRoute
   '/newtab': typeof NewtabRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/ban' | '/baninfo' | '/benchmarks' | '/newtab'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/apps'
+    | '/ban'
+    | '/baninfo'
+    | '/benchmarks'
+    | '/bookmarks'
+    | '/extensions'
+    | '/history'
+    | '/newtab'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/ban' | '/baninfo' | '/benchmarks' | '/newtab'
+  to:
+    | '/'
+    | '/about'
+    | '/apps'
+    | '/ban'
+    | '/baninfo'
+    | '/benchmarks'
+    | '/bookmarks'
+    | '/extensions'
+    | '/history'
+    | '/newtab'
   id:
     | '__root__'
     | '/'
     | '/about'
+    | '/apps'
     | '/ban'
     | '/baninfo'
     | '/benchmarks'
+    | '/bookmarks'
+    | '/extensions'
+    | '/history'
     | '/newtab'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AppsRoute: typeof AppsRoute
   BanRoute: typeof BanRoute
   BaninfoRoute: typeof BaninfoRoute
   BenchmarksRoute: typeof BenchmarksRoute
+  BookmarksRoute: typeof BookmarksRoute
+  ExtensionsRoute: typeof ExtensionsRoute
+  HistoryRoute: typeof HistoryRoute
   NewtabRoute: typeof NewtabRoute
 }
 
@@ -103,6 +167,27 @@ declare module '@tanstack/solid-router' {
       path: '/newtab'
       fullPath: '/newtab'
       preLoaderRoute: typeof NewtabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/history': {
+      id: '/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/extensions': {
+      id: '/extensions'
+      path: '/extensions'
+      fullPath: '/extensions'
+      preLoaderRoute: typeof ExtensionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bookmarks': {
+      id: '/bookmarks'
+      path: '/bookmarks'
+      fullPath: '/bookmarks'
+      preLoaderRoute: typeof BookmarksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/benchmarks': {
@@ -126,6 +211,13 @@ declare module '@tanstack/solid-router' {
       preLoaderRoute: typeof BanRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/apps': {
+      id: '/apps'
+      path: '/apps'
+      fullPath: '/apps'
+      preLoaderRoute: typeof AppsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/about': {
       id: '/about'
       path: '/about'
@@ -146,9 +238,13 @@ declare module '@tanstack/solid-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AppsRoute: AppsRoute,
   BanRoute: BanRoute,
   BaninfoRoute: BaninfoRoute,
   BenchmarksRoute: BenchmarksRoute,
+  BookmarksRoute: BookmarksRoute,
+  ExtensionsRoute: ExtensionsRoute,
+  HistoryRoute: HistoryRoute,
   NewtabRoute: NewtabRoute,
 }
 export const routeTree = rootRouteImport

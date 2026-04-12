@@ -12,6 +12,8 @@ export const BROWSER_URLS: Record<string, string> = {
     "browser:newtab": `${window.location.origin}/newtab`,
     "browser:settings": `${window.location.origin}/settings`,
     "browser:history": `${window.location.origin}/history`,
+    "browser:apps": `${window.location.origin}/apps`,
+    "browser:extensions": `${window.location.origin}/extensions`,
     "browser:bookmarks": `${window.location.origin}/bookmarks`,
     "browser:blank": "about:blank",
 };

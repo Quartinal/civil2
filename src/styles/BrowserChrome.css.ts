@@ -232,17 +232,47 @@ export const spin = style({
     transformOrigin: "center",
 });
 
-export const urlbar = style({
+export const urlbarRow = style({
     display: "flex",
     alignItems: "center",
-    gap: "2px",
-    height: "44px",
+    gap: "4px",
     padding: "0 8px",
     background: vars.color.crust,
     borderTop: `1px solid ${vars.color.surface0}`,
     borderBottom: `1px solid ${vars.color.surface0}`,
     position: "relative",
     zIndex: 2,
+});
+
+export const urlbar = style({
+    display: "flex",
+    alignItems: "center",
+    gap: "2px",
+    height: "44px",
+    flex: 1,
+    minWidth: 0,
+});
+
+export const extensionsBtn = style({
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "30px",
+    height: "30px",
+    border: "none",
+    background: "transparent",
+    color: vars.color.overlay1,
+    borderRadius: "50%",
+    cursor: "pointer",
+    flexShrink: 0,
+    padding: 0,
+    transition: `background ${T_FAST}, color ${T_FAST}`,
+    selectors: {
+        "&:hover": {
+            background: vars.color.surface0,
+            color: vars.color.lavender,
+        },
+    },
 });
 
 export const urlbarNavBtn = style({

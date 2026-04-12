@@ -20,6 +20,7 @@ const routerLoad = async (event: FetchEvent) => {
 };
 
 const proxyScripts = [
+    "/wasm_dencode.js",
     "/uv/uv.bundle.js",
     "/uv_config.js",
     "/uv/uv.sw.js",

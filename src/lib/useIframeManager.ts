@@ -1,3 +1,6 @@
+import { extensionsApplyToIframe } from "~/api/extensions";
+import { historyAdd } from "~/api/history";
+import { iframeSetCurrentSrc } from "~/api/iframe";
 import { displayUrl, normalizeNav } from "~/lib/browserHelpers";
 import { trackVisit } from "~/lib/db";
 import type searchBar from "~/lib/SearchBar";
@@ -31,6 +34,10 @@ export function createIframeManager(
                     iframe.src = `${window.location.origin}/ban?reason=${encodeURIComponent(banReason)}`;
                 },
             );
+        }
+
+        if (id === tabManager.activeId) {
+            iframeSetCurrentSrc(url);
         }
 
         if (isInternalUrl(url)) {
@@ -69,6 +76,24 @@ export function createIframeManager(
                         "Untitled",
                     favicon,
                 });
+
+                if (!isInternalUrl(href)) {
+                    const tab = tabManager.tabs.find(t => t.id === id);
+                    void historyAdd({
+                        url: href,
+                        title:
+                            docTitle ||
+                            displayUrl(tab?.url ?? href) ||
+                            "Untitled",
+                        visitedAt: Date.now(),
+                        favicon,
+                    });
+                    void extensionsApplyToIframe(el);
+                }
+
+                if (id === tabManager.activeId) {
+                    iframeSetCurrentSrc(href);
+                }
             } catch {
                 tabManager.updateTab(id, { isLoading: false });
             }
@@ -77,6 +102,9 @@ export function createIframeManager(
         const tab = tabManager.tabs.find(t => t.id === id);
         if (tab?.url) {
             push(id, tab.url);
+            if (id === tabManager.activeId) {
+                iframeSetCurrentSrc(tab.url);
+            }
             if (isInternalUrl(tab.url)) {
                 el.src = tab.url;
             } else {

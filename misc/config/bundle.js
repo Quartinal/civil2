@@ -1,6 +1,6 @@
 import { copyFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { basename } from "node:path";
+import { basename, resolve } from "node:path";
 import alias from "@rollup/plugin-alias";
 import commonjs from "@rollup/plugin-commonjs";
 import nodeResolve from "@rollup/plugin-node-resolve";
@@ -26,8 +26,14 @@ await rimraf("../../dist");
 const basePlugins = [
     alias({
         entries: [
-            { find: "$wasm", replacement: "../../config/encoder" },
-            { find: "$config", replacement: "../" },
+            {
+                find: "$wasm",
+                replacement: resolve(
+                    import.meta.dirname,
+                    "../../config/encoder",
+                ),
+            },
+            { find: "$config", replacement: import.meta.dirname },
         ],
     }),
     typescript({
@@ -51,11 +57,11 @@ const basePlugins = [
     commonjs(),
     terser({
         compress: {
-            passes: 3,
+            ecma: 2020,
+            passes: 4,
             unsafe: true,
             unsafe_arrows: true,
             unsafe_comps: true,
-            unsafe_methods: true,
             unsafe_proto: true,
             unsafe_regexp: true,
             unsafe_undefined: true,
@@ -74,11 +80,13 @@ const basePlugins = [
             reduce_vars: true,
             hoist_funs: true,
             loops: true,
+            switches: true,
             typeofs: true,
         },
         mangle: {
             toplevel: true,
             safari10: true,
+            reserved: ["__wasmDencode", "document"],
         },
         format: {
             comments: false,
@@ -87,9 +95,20 @@ const basePlugins = [
     }),
 ];
 
-const swPlugins = [...basePlugins];
+const externalWasmDencode = {
+    name: "external-wasm-dencode",
+    resolveId(source) {
+        if (source === "$config/shared/wasmDencode") {
+            return { id: "__wasmDencode", external: true };
+        }
+        return null;
+    },
+};
+
+const swPlugins = [externalWasmDencode, ...basePlugins];
 
 const plugins = [
+    externalWasmDencode,
     ...basePlugins.slice(0, 1),
     basePlugins[1],
     nodePolyfills(),
@@ -109,6 +128,40 @@ const otherInput = {
     ...configInput,
     scramjet_init: "./scramjet/scramjetInit.ts",
 };
+
+const wasmDencodeBundle = await rollup({
+    input: "./shared/wasmDencode.ts",
+    treeshake: {
+        propertyReadSideEffects: false,
+        unknownGlobalSideEffects: false,
+    },
+    plugins: [
+        ...basePlugins,
+        ...(useVisualizer
+            ? [
+                  visualizer({
+                      filename: "../../dist/stats/wasm_dencode.html",
+                      open: false,
+                  }),
+              ]
+            : []),
+    ],
+});
+
+const { output: wdOutput } = await wasmDencodeBundle.write({
+    dir: "../../dist",
+    format: "iife",
+    entryFileNames: "wasm_dencode.js",
+    name: "__wasmDencode",
+    compact: true,
+    generatedCode: { arrowFunctions: true, constBindings: true },
+});
+
+await wasmDencodeBundle.close();
+
+for (const chunk of wdOutput) {
+    console.log(green(chunk.fileName));
+}
 
 for (const [name, file] of Object.entries(otherInput)) {
     const bundle = await rollup({
@@ -135,6 +188,7 @@ for (const [name, file] of Object.entries(otherInput)) {
         format: "iife",
         entryFileNames: `${name}.js`,
         name,
+        globals: { __wasmDencode: "__wasmDencode" },
         compact: true,
         generatedCode: { arrowFunctions: true, constBindings: true },
     });
@@ -170,7 +224,8 @@ const { output: swOutput } = await swBundle.write({
     format: "iife",
     entryFileNames: "sw.js",
     name: "sw",
-    intro: "var document = { baseURI: self.location.origin };",
+    globals: { __wasmDencode: "__wasmDencode" },
+    banner: 'var document={baseURI:self.location.origin};importScripts("/wasm_dencode.js");',
     compact: true,
     generatedCode: { arrowFunctions: true, constBindings: true },
 });

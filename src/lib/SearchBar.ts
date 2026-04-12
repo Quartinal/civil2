@@ -52,7 +52,7 @@ class SearchBar
     searchEngineMap: ISearchBar["searchEngineMap"];
     ready: Promise<void>;
 
-    static #keys = ["lastUrlSearched", "url", "debugInfo"] as const;
+    private static keys = ["lastUrlSearched", "url", "debugInfo"] as const;
 
     constructor() {
         super();
@@ -83,7 +83,7 @@ class SearchBar
             }
         };
 
-        for (const key of SearchBar.#keys) {
+        for (const key of SearchBar.keys) {
             const storageKey = key
                 .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
                 .toLowerCase();

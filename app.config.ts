@@ -97,6 +97,7 @@ export default defineConfig({
                     /\n?User-agent:\s*ClaudeBot\s*\nDisallow:\s*\/\s*\n?/g,
                     "\n",
                 ),
+                sitemap: "https://civil.quartinal.me/sitemap.xml",
             }),
             nodePolyfills(),
         ],

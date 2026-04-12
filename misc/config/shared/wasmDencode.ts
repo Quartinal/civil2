@@ -10,7 +10,7 @@ export function init() {
     if (initPromise) return initPromise;
     const t0 = performance.now();
     console.debug("[xorWasm] init start");
-    initPromise = xorDencode().then((mod: any) => {
+    initPromise = xorDencode().then(mod => {
         module = mod;
         (globalThis as any)["__civil_xorWasm__"] = {
             mod: module,

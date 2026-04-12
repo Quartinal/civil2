@@ -1,4 +1,4 @@
-import { TbOutlinePlus, TbOutlineWorld } from "solid-icons/tb";
+import { TbOutlinePlus, TbOutlinePuzzle, TbOutlineWorld } from "solid-icons/tb";
 import {
     batch,
     createMemo,
@@ -9,6 +9,9 @@ import {
     Show,
 } from "solid-js";
 import { createStore, produce } from "solid-js/store";
+import BookmarksBar from "~/components/BookmarksBar";
+import { useContextMenu } from "~/components/ContextMenu";
+import ExtensionIconBar from "~/components/ExtensionIconBar";
 import { TabPill } from "~/components/ui/TabPill";
 import { UrlBar } from "~/components/ui/UrlBar";
 import {
@@ -30,6 +33,7 @@ import * as s from "~/styles/BrowserChrome.css";
 
 export default function BrowserChrome() {
     const bar = searchBar();
+    const ctx = useContextMenu();
 
     const [tabStore, setTabStore] = createStore<{ tabs: Tab[] }>({ tabs: [] });
     const [activeId, setActiveId] = createSignal<string | null>(null);
@@ -62,9 +66,10 @@ export default function BrowserChrome() {
             Math.max(TAB_MIN, (tabBarWidth() - NEW_BTN_W - 8) / n),
         );
     });
-    const activeUrl = createMemo(
-        () => tabStore.tabs.find(t => t.id === activeId())?.url ?? "",
+    const activeTab = createMemo(
+        () => tabStore.tabs.find(t => t.id === activeId()) ?? null,
     );
+    const activeUrl = createMemo(() => activeTab()?.url ?? "");
     const activeTabIsNewtab = createMemo(() => isNewtabUrl(activeUrl()));
 
     const persist = () => saveSession(tabStore.tabs, activeId());
@@ -152,8 +157,99 @@ export default function BrowserChrome() {
         );
     });
 
+    const openExtensions = () => {
+        const id = activeId();
+        if (id) navigate(id, "browser:extensions");
+    };
+
     return (
-        <div class={s.browser} ref={browserRootRef}>
+        // biome-ignore lint/a11y/noStaticElementInteractions: biome breaking my project lmao
+        <div
+            class={s.browser}
+            ref={browserRootRef}
+            onContextMenu={e => {
+                const target = e.target as HTMLElement;
+                const isInput =
+                    target.tagName === "INPUT" ||
+                    target.tagName === "TEXTAREA" ||
+                    target.isContentEditable;
+                ctx.open(e, [
+                    {
+                        label: "New Tab",
+                        icon: <TbOutlinePlus size={14} />,
+                        action: () => {
+                            const t = tabManager.createTab("browser:newtab");
+                            tabManager.activateTab(t.id);
+                        },
+                    },
+                    { type: "separator" },
+                    {
+                        label: "Extensions",
+                        icon: <TbOutlinePuzzle size={14} />,
+                        action: openExtensions,
+                    },
+                    {
+                        label: "History",
+                        action: () => {
+                            const id = activeId();
+                            if (id) navigate(id, "browser:history");
+                        },
+                    },
+                    {
+                        label: "Bookmarks",
+                        action: () => {
+                            const id = activeId();
+                            if (id) navigate(id, "browser:bookmarks");
+                        },
+                    },
+                    {
+                        label: "Apps",
+                        action: () => {
+                            const id = activeId();
+                            if (id) navigate(id, "browser:apps");
+                        },
+                    },
+                    { type: "separator" },
+                    ...(isInput
+                        ? [
+                              {
+                                  label: "Cut",
+                                  shortcut: "⌘X",
+                                  action: () => document.execCommand("cut"),
+                              },
+                              {
+                                  label: "Copy",
+                                  shortcut: "⌘C",
+                                  action: () => document.execCommand("copy"),
+                              },
+                              {
+                                  label: "Paste",
+                                  shortcut: "⌘V",
+                                  action: () => document.execCommand("paste"),
+                              },
+                              { type: "separator" as const },
+                          ]
+                        : []),
+                    {
+                        label: "View Source",
+                        action: () => {
+                            const url = activeUrl();
+                            if (url)
+                                window.open(`view-source:${url}`, "_blank");
+                        },
+                    },
+                    { type: "separator" },
+                    {
+                        label: "Close Tab",
+                        danger: true,
+                        action: () => {
+                            const id = activeId();
+                            if (id) tabManager.removeTab(id);
+                        },
+                    },
+                ]);
+            }}
+        >
             <div class={s.browserChrome}>
                 <div class={s.browserTabstrip} ref={tabStripRef}>
                     <For each={tabStore.tabs}>
@@ -181,46 +277,67 @@ export default function BrowserChrome() {
                     </button>
                 </div>
 
-                <UrlBar
-                    value={activeUrl()}
-                    canBack={canBack(activeId())}
-                    canForward={canForward(activeId())}
-                    isNewtab={activeTabIsNewtab()}
+                <div class={s.urlbarRow}>
+                    <UrlBar
+                        value={activeUrl()}
+                        canBack={canBack(activeId())}
+                        canForward={canForward(activeId())}
+                        isNewtab={activeTabIsNewtab()}
+                        onNavigate={url => {
+                            const id = activeId();
+                            if (id) navigate(id, url);
+                        }}
+                        onBack={() => {
+                            const id = activeId();
+                            if (!id) return;
+                            const h = getHistory(id);
+                            if (h.cursor > 0) {
+                                h.cursor--;
+                                navigateIframe(id, h.stack[h.cursor]);
+                            }
+                        }}
+                        onForward={() => {
+                            const id = activeId();
+                            if (!id) return;
+                            const h = getHistory(id);
+                            if (h.cursor < h.stack.length - 1) {
+                                h.cursor++;
+                                navigateIframe(id, h.stack[h.cursor]);
+                            }
+                        }}
+                        onRefresh={() => {
+                            const id = activeId();
+                            if (!id) return;
+                            const tab = tabStore.tabs.find(t => t.id === id);
+                            if (!tab) return;
+                            const iframe = iframeMap.get(id);
+                            if (!iframe) return;
+                            tabManager.updateTab(id, { isLoading: true });
+                            if (isInternalUrl(tab.url)) {
+                                iframe.src = tab.url;
+                            } else {
+                                bar.emit("submit", iframe, tab.url);
+                            }
+                        }}
+                    />
+                    <ExtensionIconBar />
+                    <button
+                        type="button"
+                        class={s.extensionsBtn}
+                        title="Extensions"
+                        onClick={openExtensions}
+                    >
+                        <TbOutlinePuzzle size={15} />
+                    </button>
+                </div>
+
+                <BookmarksBar
+                    activeUrl={activeUrl()}
+                    activeTitle={activeTab()?.title ?? ""}
+                    activeFavicon={activeTab()?.favicon}
                     onNavigate={url => {
                         const id = activeId();
                         if (id) navigate(id, url);
-                    }}
-                    onBack={() => {
-                        const id = activeId();
-                        if (!id) return;
-                        const h = getHistory(id);
-                        if (h.cursor > 0) {
-                            h.cursor--;
-                            navigateIframe(id, h.stack[h.cursor]);
-                        }
-                    }}
-                    onForward={() => {
-                        const id = activeId();
-                        if (!id) return;
-                        const h = getHistory(id);
-                        if (h.cursor < h.stack.length - 1) {
-                            h.cursor++;
-                            navigateIframe(id, h.stack[h.cursor]);
-                        }
-                    }}
-                    onRefresh={() => {
-                        const id = activeId();
-                        if (!id) return;
-                        const tab = tabStore.tabs.find(t => t.id === id);
-                        if (!tab) return;
-                        const iframe = iframeMap.get(id);
-                        if (!iframe) return;
-                        tabManager.updateTab(id, { isLoading: true });
-                        if (isInternalUrl(tab.url)) {
-                            iframe.src = tab.url;
-                        } else {
-                            bar.emit("submit", iframe, tab.url);
-                        }
                     }}
                 />
             </div>
