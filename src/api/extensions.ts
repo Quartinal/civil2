@@ -1,3 +1,4 @@
+import { resolveExtIcon, resolveExtPopupUrl } from "@quartinal/extension-shim";
 import { inflateSync } from "fflate";
 import type { ChromeManifest, CivilExtension, FirefoxManifest } from "~/types";
 import { getTFS } from "./fs";
@@ -399,42 +400,27 @@ export function extensionsReadText(
 }
 
 /**
- * Resolve the best available icon path from a manifest given a preferred size.
+ * Resolve the best available icon URL for an extension at a given preferred size.
+ * Delegates to @quartinal/extension-shim which returns a /civil-ext/<id>/<path> URL
+ * served directly by the service worker.
  */
 export function extensionsResolveIcon(
+    extId: string,
     manifest: ChromeManifest | FirefoxManifest,
     preferredSize = 48,
 ): string | null {
-    const icons =
-        manifest.icons ??
-        (manifest as any).browser_action?.default_icon ??
-        (manifest as any).action?.default_icon;
-
-    if (!icons) return null;
-
-    if (typeof icons === "string") return icons;
-
-    const sizes = Object.keys(icons)
-        .map(Number)
-        .filter(n => !Number.isNaN(n))
-        .sort((a, b) => a - b);
-    if (sizes.length === 0) return null;
-
-    const best = sizes.find(s => s >= preferredSize) ?? sizes[sizes.length - 1];
-    return (icons as Record<string, string>)[String(best)] ?? null;
+    return resolveExtIcon(extId, manifest as any, preferredSize);
 }
 
 /**
- * Resolve the popup HTML path from a manifest action/browser_action.
+ * Resolve the popup HTML URL for an extension.
+ * Delegates to @quartinal/extension-shim which returns a /civil-ext/<id>/<path> URL.
  */
 export function extensionsResolvePopup(
+    extId: string,
     manifest: ChromeManifest | FirefoxManifest,
 ): string | null {
-    return (
-        (manifest as any).action?.default_popup ??
-        (manifest as any).browser_action?.default_popup ??
-        null
-    );
+    return resolveExtPopupUrl(extId, manifest as any);
 }
 
 /**

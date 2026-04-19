@@ -1,8 +1,7 @@
-import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { createSignal, For, onMount, Show } from "solid-js";
 import { Portal } from "solid-js/web";
 import {
     extensionsGetAll,
-    extensionsReadFile,
     extensionsResolveIcon,
     extensionsResolvePopup,
 } from "~/api/extensions";
@@ -11,13 +10,13 @@ import type { ChromeManifest, CivilExtension } from "~/types";
 
 interface ExtIconState {
     ext: Omit<CivilExtension, "files">;
-    iconDataUrl: string | null;
-    popupPath: string | null;
+    iconUrl: string | null;
+    popupUrl: string | null;
 }
 
 interface PopupState {
     extId: string;
-    popupPath: string;
+    popupUrl: string;
     x: number;
     y: number;
     width: number;
@@ -36,63 +35,23 @@ function clampPopup(x: number, y: number): { x: number; y: number } {
     };
 }
 
-function buildExtensionFileUrl(extId: string, filePath: string): string {
-    return `/civil-ext/${extId}/${filePath}`;
-}
-
 export default function ExtensionIconBar() {
     const [icons, setIcons] = createSignal<ExtIconState[]>([]);
     const [popup, setPopup] = createSignal<PopupState | null>(null);
 
-    onMount(async () => {
+    onMount(() => {
         const all = extensionsGetAll().filter(e => e.enabled);
-        const resolved = await Promise.all(
-            all.map(async ext => {
-                const manifest = ext.manifest as ChromeManifest;
-                const iconPath = extensionsResolveIcon(manifest, 48);
-                const popupPath = extensionsResolvePopup(manifest);
-                let iconDataUrl: string | null = null;
-
-                if (iconPath) {
-                    try {
-                        const bytes = await extensionsReadFile(
-                            ext.id,
-                            iconPath,
-                        );
-                        const ext_ =
-                            iconPath.split(".").pop()?.toLowerCase() ?? "png";
-                        const mime =
-                            ext_ === "svg"
-                                ? "image/svg+xml"
-                                : ext_ === "jpg"
-                                  ? "image/jpeg"
-                                  : "image/png";
-                        const blobBytes = new Uint8Array(bytes);
-                        const blob = new Blob([blobBytes], { type: mime });
-                        iconDataUrl = URL.createObjectURL(blob);
-                    } catch (e) {
-                        console.warn(
-                            "[ExtensionIconBar] icon load failed for",
-                            ext.id,
-                            e,
-                        );
-                    }
-                }
-
-                return { ext, iconDataUrl, popupPath };
-            }),
-        );
+        const resolved = all.map(ext => {
+            const manifest = ext.manifest as ChromeManifest;
+            const iconUrl = extensionsResolveIcon(ext.id, manifest, 48);
+            const popupUrl = extensionsResolvePopup(ext.id, manifest);
+            return { ext, iconUrl, popupUrl };
+        });
         setIcons(resolved);
     });
 
-    onCleanup(() => {
-        icons().forEach(i => {
-            if (i.iconDataUrl) URL.revokeObjectURL(i.iconDataUrl);
-        });
-    });
-
     const handleClick = (e: MouseEvent, item: ExtIconState) => {
-        if (!item.popupPath) return;
+        if (!item.popupUrl) return;
 
         const btn = (e.currentTarget as HTMLElement).getBoundingClientRect();
         const rawX = btn.left;
@@ -107,7 +66,7 @@ export default function ExtensionIconBar() {
 
         setPopup({
             extId: item.ext.id,
-            popupPath: item.popupPath,
+            popupUrl: item.popupUrl,
             x,
             y,
             width: POPUP_W,
@@ -129,7 +88,7 @@ export default function ExtensionIconBar() {
                             onClick={e => handleClick(e, item)}
                         >
                             <Show
-                                when={item.iconDataUrl}
+                                when={item.iconUrl}
                                 fallback={
                                     <span class={s.extIconFallback}>
                                         {item.ext.name
@@ -139,7 +98,7 @@ export default function ExtensionIconBar() {
                                 }
                             >
                                 <img
-                                    src={item.iconDataUrl!}
+                                    src={item.iconUrl!}
                                     class={s.extIcon}
                                     alt={item.ext.name}
                                 />
@@ -173,10 +132,7 @@ export default function ExtensionIconBar() {
                         >
                             <iframe
                                 class={s.popupFrame}
-                                src={buildExtensionFileUrl(
-                                    p().extId,
-                                    p().popupPath,
-                                )}
+                                src={p().popupUrl}
                                 title="Extension popup"
                             />
                         </div>

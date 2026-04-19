@@ -128,8 +128,7 @@ class SearchBar
 
         this.on("submit", (frame, term) => {
             const storedProxy =
-                (localStorage.getItem("proxy") as "uv" | "scramjet") ||
-                "scramjet";
+                (localStorage.getItem("proxy") as "uv" | "scramjet") || "uv";
             const proxy = this.proxyObjMap.find(p => p.name === storedProxy)!;
 
             let normalizedTerm: string;

@@ -8,6 +8,7 @@ import { createSignal, For, onMount, Show } from "solid-js";
 import {
     extensionsGetAll,
     extensionsInstallFromUrl,
+    extensionsResolveIcon,
     extensionsSetEnabled,
     extensionsUninstall,
 } from "~/api/extensions";
@@ -19,30 +20,8 @@ type ExtensionListItem = Omit<CivilExtension, "files"> & {
 };
 
 function ExtensionIcon(props: { ext: ExtensionListItem }) {
-    const iconPath = () => {
-        const manifest = props.ext.manifest;
-        const icons = manifest.icons;
-        if (!icons) return null;
-        const sizes = Object.keys(icons)
-            .map(Number)
-            .sort((a, b) => b - a);
-        if (!sizes.length) return null;
-        return icons[String(sizes[0])];
-    };
-
-    const iconBytes = () => {
-        const p = iconPath();
-        if (!p) return null;
-        return props.ext.files?.get(p) ?? null;
-    };
-
-    const iconUrl = () => {
-        const bytes = iconBytes();
-        if (!bytes) return null;
-        const normalizedBytes = new Uint8Array(bytes);
-        const blob = new Blob([normalizedBytes], { type: "image/png" });
-        return URL.createObjectURL(blob);
-    };
+    const iconUrl = () =>
+        extensionsResolveIcon(props.ext.id, props.ext.manifest as any, 48);
 
     return (
         <div class={s.cardIcon}>

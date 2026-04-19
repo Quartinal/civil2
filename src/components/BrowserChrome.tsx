@@ -12,6 +12,7 @@ import { createStore, produce } from "solid-js/store";
 import BookmarksBar from "~/components/BookmarksBar";
 import { useContextMenu } from "~/components/ContextMenu";
 import ExtensionIconBar from "~/components/ExtensionIconBar";
+import TabSearch from "~/components/TabSearch";
 import { TabPill } from "~/components/ui/TabPill";
 import { UrlBar } from "~/components/ui/UrlBar";
 import {
@@ -27,7 +28,7 @@ import {
     tabManager,
 } from "~/lib/TabManager";
 import { createIframeManager } from "~/lib/useIframeManager";
-import { createTabDrag } from "~/lib/useTabDrag";
+import { registerTabMonitor } from "~/lib/useTabDrag";
 
 import * as s from "~/styles/BrowserChrome.css";
 
@@ -40,6 +41,7 @@ export default function BrowserChrome() {
     const [tabBarWidth, setTabBarWidth] = createSignal(600);
     const [draggingId, setDraggingId] = createSignal<string | null>(null);
     const [iframeIds, setIframeIds] = createSignal<string[]>([]);
+    const [showSearch, setShowSearch] = createSignal(false);
 
     const { getHistory, pushHistory, canBack, canForward } = createTabHistory();
     const { iframeMap, navigateIframe, navigate, registerIframe } =
@@ -47,13 +49,6 @@ export default function BrowserChrome() {
 
     let tabStripRef: HTMLDivElement | undefined;
     let browserRootRef: HTMLDivElement | undefined;
-
-    const { startDrag } = createTabDrag({
-        getTabStripRef: () => tabStripRef,
-        getBrowserRootRef: () => browserRootRef,
-        getTabs: () => tabStore.tabs,
-        setDraggingId,
-    });
 
     const TAB_MIN = 60,
         TAB_MAX = 220,
@@ -125,6 +120,8 @@ export default function BrowserChrome() {
     onMount(() => {
         if (tabStripRef) ro.observe(tabStripRef);
 
+        registerTabMonitor({ setDraggingId });
+
         const session = loadSession();
         if (session) {
             for (const saved of session.tabs) {
@@ -155,11 +152,24 @@ export default function BrowserChrome() {
         onCleanup(() =>
             document.removeEventListener("browser:navigate", onBrowserNavigate),
         );
+
+        const onGlobalKey = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+                e.preventDefault();
+                setShowSearch(v => !v);
+            }
+        };
+        window.addEventListener("keydown", onGlobalKey);
+        onCleanup(() => window.removeEventListener("keydown", onGlobalKey));
     });
 
     const openExtensions = () => {
         const id = activeId();
         if (id) navigate(id, "browser:extensions");
+    };
+
+    const handleReorder = (tabId: string, newIndex: number) => {
+        tabManager.moveTab(tabId, newIndex);
     };
 
     return (
@@ -260,7 +270,10 @@ export default function BrowserChrome() {
                                 width={tabWidth()}
                                 isDragging={tab.id === draggingId()}
                                 onClose={() => tabManager.removeTab(tab.id)}
-                                onPointerDown={e => startDrag(tab.id, e)}
+                                setDraggingId={setDraggingId}
+                                getTabs={() => tabStore.tabs}
+                                getStrip={() => tabStripRef}
+                                onReorder={handleReorder}
                             />
                         )}
                     </For>
@@ -283,6 +296,7 @@ export default function BrowserChrome() {
                         canBack={canBack(activeId())}
                         canForward={canForward(activeId())}
                         isNewtab={activeTabIsNewtab()}
+                        onTabSearch={() => setShowSearch(true)}
                         onNavigate={url => {
                             const id = activeId();
                             if (id) navigate(id, url);
@@ -372,6 +386,18 @@ export default function BrowserChrome() {
                     </div>
                 </Show>
             </div>
+
+            {/* Tab search overlay */}
+            <Show when={showSearch()}>
+                <TabSearch
+                    tabs={tabStore.tabs}
+                    activeId={activeId()}
+                    onActivate={tabId => {
+                        tabManager.activateTab(tabId);
+                    }}
+                    onClose={() => setShowSearch(false)}
+                />
+            </Show>
         </div>
     );
 }

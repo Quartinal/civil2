@@ -49,7 +49,7 @@ function genTechnologyUrl(technology: "wisp" | "bare") {
 }
 
 async function setupBareMux() {
-    const transport = localStorage.getItem("transport") || "epoxy";
+    const transport = localStorage.getItem("transport") || "libcurl";
 
     const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
 

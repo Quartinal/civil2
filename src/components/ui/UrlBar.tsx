@@ -3,6 +3,7 @@ import {
     TbOutlineArrowRight,
     TbOutlineLock,
     TbOutlineRefresh,
+    TbOutlineSearch,
 } from "solid-icons/tb";
 import { createSignal, For, Show } from "solid-js";
 import { displayUrl, isProbablyUrl, WS_URL } from "~/lib/browserHelpers";
@@ -18,6 +19,8 @@ interface UrlBarProps {
     onBack: () => void;
     onForward: () => void;
     onRefresh: () => void;
+    /** called when the user triggers tab search (Ctrl+K or clicking the search icon) */
+    onTabSearch: () => void;
 }
 
 export function UrlBar(props: UrlBarProps) {
@@ -107,6 +110,15 @@ export function UrlBar(props: UrlBarProps) {
                 <TbOutlineRefresh size={17} />
             </button>
 
+            <button
+                type="button"
+                class={s.urlbarNavBtn}
+                title="Search tabs (Ctrl+K)"
+                onClick={props.onTabSearch}
+            >
+                <TbOutlineSearch size={15} />
+            </button>
+
             <div class={s.urlbarOmniboxWrap}>
                 <div
                     class={s.urlbarOmnibox}
@@ -149,6 +161,11 @@ export function UrlBar(props: UrlBarProps) {
                                 setSuggestions([]);
                                 setEditing(false);
                                 inputRef?.blur();
+                            }
+                            if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+                                e.preventDefault();
+                                inputRef?.blur();
+                                props.onTabSearch();
                             }
                         }}
                         spellcheck={false}

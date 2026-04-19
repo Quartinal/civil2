@@ -125,8 +125,20 @@ globalStyle(`.${tabActive} + .${tab}::after, .${tab} + .${tabActive}::after`, {
 });
 
 export const tabDragging = style({
-    visibility: "hidden",
-    pointerEvents: "none",
+    opacity: 0.4,
+});
+
+globalStyle(`.${tab}[data-tab-drop-over="true"]`, {
+    background: `color-mix(in srgb, ${vars.color.lavender} 14%, ${vars.color.mantle})`,
+    color: vars.color.text,
+    boxShadow: [
+        // top edge
+        `inset 0 1.5px 0 0 color-mix(in srgb, ${vars.color.lavender} 65%, transparent)`,
+        // left edge
+        `inset 1.5px 0 0 0 color-mix(in srgb, ${vars.color.lavender} 65%, transparent)`,
+        // right edge
+        `inset -1.5px 0 0 0 color-mix(in srgb, ${vars.color.lavender} 65%, transparent)`,
+    ].join(", "),
 });
 
 export const tabFavicon = style({
