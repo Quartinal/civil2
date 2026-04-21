@@ -10,6 +10,7 @@ import {
 } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import BookmarksBar from "~/components/BookmarksBar";
+import { ChiiPanel } from "~/components/ChiiPanel";
 import { useContextMenu } from "~/components/ContextMenu";
 import ExtensionIconBar from "~/components/ExtensionIconBar";
 import TabSearch from "~/components/TabSearch";
@@ -27,7 +28,10 @@ import {
     type Tab,
     tabManager,
 } from "~/lib/TabManager";
-import { createIframeManager } from "~/lib/useIframeManager";
+import {
+    createIframeManager,
+    injectChiiIntoIframe,
+} from "~/lib/useIframeManager";
 import { registerTabMonitor } from "~/lib/useTabDrag";
 
 import * as s from "~/styles/BrowserChrome.css";
@@ -42,6 +46,7 @@ export default function BrowserChrome() {
     const [draggingId, setDraggingId] = createSignal<string | null>(null);
     const [iframeIds, setIframeIds] = createSignal<string[]>([]);
     const [showSearch, setShowSearch] = createSignal(false);
+    const [chiiOpen, setChiiOpen] = createSignal(false);
 
     const { getHistory, pushHistory, canBack, canForward } = createTabHistory();
     const { iframeMap, navigateIframe, navigate, registerIframe } =
@@ -66,6 +71,10 @@ export default function BrowserChrome() {
     );
     const activeUrl = createMemo(() => activeTab()?.url ?? "");
     const activeTabIsNewtab = createMemo(() => isNewtabUrl(activeUrl()));
+    const activeIframe = createMemo(() => {
+        const id = activeId();
+        return id ? iframeMap.get(id) : undefined;
+    });
 
     const persist = () => saveSession(tabStore.tabs, activeId());
 
@@ -84,6 +93,7 @@ export default function BrowserChrome() {
     );
     tabManager.on("tabActivated", id => {
         setActiveId(id);
+        setChiiOpen(false);
         persist();
     });
     tabManager.on("tabUpdated", upd => {
@@ -241,13 +251,18 @@ export default function BrowserChrome() {
                           ]
                         : []),
                     {
-                        label: "View Source",
+                        label: "Inspect",
                         action: () => {
-                            const url = activeUrl();
-                            if (url)
-                                window.open(`view-source:${url}`, "_blank");
+                            const id = activeId();
+                            if (!id) return;
+                            const iframe = iframeMap.get(id);
+                            if (!iframe) return;
+                            if (isInternalUrl(activeUrl())) return;
+                            injectChiiIntoIframe(iframe);
+                            setChiiOpen(true);
                         },
                     },
+
                     { type: "separator" },
                     {
                         label: "Close Tab",
@@ -384,6 +399,16 @@ export default function BrowserChrome() {
                             Open a tab
                         </button>
                     </div>
+                </Show>
+                <Show when={chiiOpen() && activeIframe()}>
+                    <ChiiPanel
+                        targetIframe={activeIframe()!}
+                        onClose={() => setChiiOpen(false)}
+                        onDetach={url => {
+                            window.open(url, "_blank", "width=1000,height=700");
+                            setChiiOpen(false);
+                        }}
+                    />
                 </Show>
             </div>
 

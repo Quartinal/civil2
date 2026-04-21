@@ -111,6 +111,6 @@ async function swResponse(event: FetchEvent) {
     return await fetch(request);
 }
 
-self.addEventListener("fetch", async (event: FetchEvent) => {
+self.addEventListener("fetch", (event: FetchEvent) => {
     event.respondWith(swResponse(event));
 });

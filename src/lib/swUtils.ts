@@ -50,27 +50,34 @@ function genTechnologyUrl(technology: "wisp" | "bare") {
 
 async function setupBareMux() {
     const transport = localStorage.getItem("transport") || "libcurl";
-
     const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
-
     const sharedSetTransportOpts = [{ wisp: genTechnologyUrl("wisp") }];
 
-    switch (transport) {
-        case "epoxy":
-        case "libcurl":
-            await connection.setTransport(
-                `/${transport}/index.mjs`,
-                sharedSetTransportOpts,
-            );
-            console.log(`set transport to /${transport}/index.mjs with wisp`);
-            break;
-        case "baremod":
-            await connection.setTransport("/baremod/index.mjs", [
-                genTechnologyUrl("bare"),
-            ]);
-            console.log("set transport to /baremod/index.mjs with bare-server");
-            break;
-    }
+    const doSetTransport = async () => {
+        switch (transport) {
+            case "epoxy":
+            case "libcurl":
+                await connection.setTransport(
+                    `/${transport}/index.mjs`,
+                    sharedSetTransportOpts,
+                );
+                break;
+            case "baremod":
+                await connection.setTransport("/baremod/index.mjs", [
+                    genTechnologyUrl("bare"),
+                ]);
+                break;
+        }
+    };
+
+    await doSetTransport();
+
+    const channel = new BroadcastChannel("bare-mux");
+    channel.addEventListener("message", async (e: MessageEvent) => {
+        if (e.data?.type === "refreshPort") {
+            await doSetTransport();
+        }
+    });
 }
 
 export { registerSw, setupBareMux, unregisterSw };

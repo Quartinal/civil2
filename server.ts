@@ -1,13 +1,12 @@
 import { existsSync } from "node:fs";
 import { createServer } from "node:http";
-
 import { resolve } from "node:path";
 import { scramjetPath } from "@mercuryworkshop/scramjet/path";
 import { uvPath } from "@titaniumnetwork-dev/ultraviolet";
+import { start as startChii } from "chii";
 import compression from "compression";
 import express from "express";
 
-// @ts-expect-error bro untyped module smh
 import createRammerhead from "rammerhead";
 
 const transportModulePrefix = "node_modules/@mercuryworkshop";
@@ -25,7 +24,7 @@ const { epoxyPath, libcurlPath, baremodulePath } = {
     baremodulePath: resolve(
         import.meta.dirname,
         transportModulePrefix,
-        "bare-transport/dist",
+        "bare-as-module3/dist",
     ),
 };
 
@@ -36,7 +35,6 @@ import type {
 } from "node:http";
 import type { Socket } from "node:net";
 import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
-// @ts-expect-error bro untyped module smh
 import { logging, server as wisp } from "@mercuryworkshop/wisp-js/server";
 import { createBareServer } from "@tomphttp/bare-server-node";
 import { XMLParser } from "fast-xml-parser";
@@ -105,7 +103,15 @@ if (
 }
 
 const app = express();
-const server = createServer(app);
+const server = createServer((req, res) => {
+    if (req.url?.startsWith("/chii/") || req.url === "/chii") return;
+    app(req, res);
+});
+await startChii({
+    server,
+    basePath: "/chii/",
+});
+
 const wss = new WebSocketServer({ noServer: true });
 
 const GOOGLE_URL =

@@ -23,10 +23,10 @@
         "@fontsource/titan-one": "^5.2.8",
         "@leeoniya/ufuzzy": "^1.0.19",
         "@lottiefiles/dotlottie-web": "^0.71.0",
+        "@mercuryworkshop/bare-as-module3": "^2.2.5",
         "@mercuryworkshop/bare-mux": "^2.1.8",
-        "@mercuryworkshop/bare-transport": "^1.0.0",
-        "@mercuryworkshop/epoxy-transport": "^3.0.1",
-        "@mercuryworkshop/libcurl-transport": "^2.0.5",
+        "@mercuryworkshop/epoxy-transport": "2.1.28",
+        "@mercuryworkshop/libcurl-transport": "1.5.2",
         "@mercuryworkshop/scramjet": "https://github.com/MercuryWorkshop/scramjet/releases/download/latest/mercuryworkshop-scramjet-2.0.0-alpha.tgz",
         "@mercuryworkshop/wisp-js": "^0.4.1",
         "@plausible-analytics/tracker": "^0.4.4",
@@ -41,6 +41,7 @@
         "@tomphttp/bare-server-node": "^2.0.6",
         "@types/ws": "^8.18.1",
         "@vanilla-extract/css": "^1.20.1",
+        "chii": "^1.15.5",
         "compression": "^1.8.1",
         "echarts": "^6.0.0",
         "express": "^5.2.1",
@@ -82,5 +83,8 @@
     },
     "trustedDependencies": [
         "rammerhead"
-    ]
+    ],
+    "patchedDependencies": {
+        "chii@1.15.5": "patches/chii@1.15.5.patch"
+    }
 }

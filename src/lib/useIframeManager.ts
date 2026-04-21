@@ -8,6 +8,45 @@ import { isInternalUrl, resolveUrl, tabManager } from "~/lib/TabManager";
 
 type BarInstance = ReturnType<typeof searchBar>;
 
+export function injectChiiIntoIframe(
+    iframe: HTMLIFrameElement,
+    devtoolsIframe?: HTMLIFrameElement,
+): void {
+    const inject = () => {
+        try {
+            const doc = iframe.contentDocument;
+            if (!doc || doc.location.href === "about:blank") return;
+            doc.getElementById("__civil_chii__")?.remove();
+            const script = doc.createElement("script");
+            script.id = "__civil_chii__";
+            script.src = `${window.location.origin}/chii/target.js`;
+            script.setAttribute("embedded", "true");
+            script.setAttribute("defer", "");
+            if (devtoolsIframe) {
+                script.onload = () => {
+                    (iframe.contentWindow as any).ChiiDevtoolsIframe =
+                        devtoolsIframe;
+                };
+            }
+            (doc.body ?? doc.head ?? doc.documentElement)?.appendChild(script);
+        } catch {}
+    };
+
+    const onLoad = () => {
+        inject();
+        iframe.addEventListener("load", onLoad, { once: true });
+    };
+
+    if (
+        iframe.contentDocument?.readyState === "complete" &&
+        iframe.contentDocument?.location.href !== "about:blank"
+    ) {
+        inject();
+    }
+
+    iframe.addEventListener("load", onLoad, { once: true });
+}
+
 export function createIframeManager(
     bar: BarInstance,
     push: (id: string, url: string) => void,
@@ -89,6 +128,16 @@ export function createIframeManager(
                         favicon,
                     });
                     void extensionsApplyToIframe(el);
+                    try {
+                        const doc = el.contentDocument;
+                        if (doc && !doc.getElementById("__civil_chii__")) {
+                            const s = doc.createElement("script");
+                            s.id = "__civil_chii__";
+                            s.src = `${window.location.origin}/chii/target.js`;
+                            s.setAttribute("embedded", "true");
+                            (doc.head ?? doc.documentElement)?.appendChild(s);
+                        }
+                    } catch {}
                 }
 
                 if (id === tabManager.activeId) {
